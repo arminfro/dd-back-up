@@ -19,8 +19,8 @@ pub struct LsblkOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Lsblk {
-    available_devices: Vec<BlockDevice>,
-    available_filesystems: Vec<BlockDevice>,
+    pub available_devices: Vec<BlockDevice>,
+    pub available_filesystems: Vec<BlockDevice>,
 }
 
 impl Lsblk {

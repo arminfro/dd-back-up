@@ -23,9 +23,12 @@ enum Commands {
 
 pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
-    let config = Config::new().expect("Failed to create Config struct object");
+    let config =
+        Config::new().map_err(|e| format!("Failed to create Config struct object: {}", e))?;
 
     match &cli.command {
-        Commands::BackUp(args) => back_up_run(args, config),
+        Commands::BackUp(args) => {
+            back_up_run(args, config).map_err(|e| format!("Failed to run backups: {}", e))
+        }
     }
 }

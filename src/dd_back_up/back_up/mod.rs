@@ -18,8 +18,8 @@ pub fn run(back_up_args: &BackUpArgs, config: Config) -> Result<(), String> {
     eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
     for (dst_filesystem, back_up_config) in &config.dst_filesystems {
-        let backup = BackUp::new(dst_filesystem, back_up_config);
-        eprintln!("DEBUGPRINT[2]: mod.rs:17: backup={:#?}", backup);
+        BackUp::new(dst_filesystem, back_up_config, &lsblk)?;
     }
+
     Ok(())
 }
