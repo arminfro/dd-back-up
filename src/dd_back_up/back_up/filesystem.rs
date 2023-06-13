@@ -1,4 +1,4 @@
-use super::lsblk::{BlockDevice, Lsblk};
+use super::lsblk::BlockDevice;
 
 /// Represents a filesystem associated with a block device.
 #[derive(Debug)]
@@ -10,8 +10,11 @@ impl Filesystem {
     /// Creates a new `Filesystem` instance for the specified UUID, using the provided `Lsblk` instance.
     /// It returns `Ok(Some(Filesystem))` if the UUID is unique and associated with a block device,
     /// `Ok(None)` if the UUID is not found in the available filesystems, or an error message if the UUID is not unique.
-    pub fn new(uuid: &str, lsblk: &Lsblk) -> Result<Option<Filesystem>, String> {
-        let uuid_filtered_lsblk = Self::validate_uuid_uniq(uuid, &lsblk.available_filesystems)?;
+    pub fn new(
+        uuid: &str,
+        available_filesystems: &Vec<BlockDevice>,
+    ) -> Result<Option<Filesystem>, String> {
+        let uuid_filtered_lsblk = Self::validate_uuid_uniq(uuid, available_filesystems)?;
 
         match Self::validate_present_uuid(uuid_filtered_lsblk) {
             Some(blockdevice) => Ok(Some(Filesystem {

@@ -15,7 +15,7 @@ pub struct BackUpArgs {}
 pub fn run(back_up_args: &BackUpArgs, config: Config) -> Result<(), String> {
     eprintln!("DEBUGPRINT[1]: mod.rs:15: back_up_args={:#?}", back_up_args);
     let lsblk = Lsblk::new()?;
-    eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
+    // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
     for (dst_filesystem, back_up_config) in &config.dst_filesystems {
         BackUp::new(dst_filesystem, back_up_config, &lsblk)?;
