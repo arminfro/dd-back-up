@@ -3,8 +3,11 @@ use super::{command_output::command_output, lsblk::BlockDevice};
 /// Represents a filesystem associated with a block device.
 #[derive(Debug)]
 pub struct Filesystem {
+    /// The underlying block device information.
     pub blockdevice: BlockDevice,
+    /// The path to the device.
     pub device_path: String,
+    /// The mount path for the filesystem.
     pub mountpath: Option<String>,
 }
 

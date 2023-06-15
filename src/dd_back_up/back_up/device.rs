@@ -5,8 +5,11 @@ use super::lsblk::BlockDevice;
 pub struct Device {
     /// The underlying block device information.
     pub blockdevice: BlockDevice,
+    /// The path to the device.
     pub device_path: String,
+    /// The name of the device.
     pub name: String,
+    /// The destination path for the device.
     pub destination_path: String,
 }
 

@@ -4,22 +4,31 @@ use std::process::{Command, Stdio};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BlockDevice {
+    /// The name of the block device.
     pub name: String,
+    /// The model of the block device.
     pub model: Option<String>,
+    /// The serial number of the block device.
     pub serial: Option<String>,
+    /// The UUID of the block device.
     pub uuid: Option<String>,
+    /// The mount point of the block device.
     pub mountpoint: Option<String>,
+    /// The size of the block device.
     pub size: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LsblkOutput {
+    /// The list of block devices.
     pub blockdevices: Vec<BlockDevice>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Lsblk {
+    /// The list of available block devices.
     pub available_devices: Vec<BlockDevice>,
+    /// The list of available block device filesystems.
     pub available_filesystems: Vec<BlockDevice>,
 }
 

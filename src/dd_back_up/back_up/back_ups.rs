@@ -8,9 +8,12 @@ use super::RunArgs;
 
 #[derive(Debug)]
 pub struct BackUps<'a> {
-    dst_filesystem: Filesystem,
-    back_up_devices: Vec<Device>,
-    back_up_args: &'a RunArgs,
+    /// The destination filesystem for the backup.
+    pub dst_filesystem: Filesystem,
+    /// The list of backup devices.
+    pub back_up_devices: Vec<Device>,
+    /// The command line arguments for the backup operation.
+    pub back_up_args: &'a RunArgs,
 }
 
 impl<'a> BackUps<'a> {

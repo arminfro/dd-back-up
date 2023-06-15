@@ -5,9 +5,12 @@ use crate::dd_back_up::utils::current_date;
 use super::{command_output::command_output, device::Device, filesystem::Filesystem, RunArgs};
 
 pub struct BackUp<'a> {
-    dst_filesystem: &'a Filesystem,
-    back_up_device: &'a Device,
-    back_up_args: &'a RunArgs,
+    /// The destination filesystem for the backup.
+    pub dst_filesystem: &'a Filesystem,
+    /// The backup device.
+    pub back_up_device: &'a Device,
+    /// The command line arguments for the backup operation.
+    pub back_up_args: &'a RunArgs,
 }
 
 impl<'a> BackUp<'a> {
