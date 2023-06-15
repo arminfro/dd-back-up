@@ -1,4 +1,4 @@
-mod back_up;
+mod back_ups;
 mod command_output;
 mod device;
 mod filesystem;
@@ -6,7 +6,7 @@ mod lsblk;
 
 use clap::Args;
 
-use super::back_up::back_up::BackUp;
+use super::back_up::back_ups::BackUps;
 use super::back_up::lsblk::Lsblk;
 use super::config::Config;
 
@@ -19,8 +19,8 @@ pub fn run(back_up_args: &BackUpArgs, config: Config) -> Result<(), String> {
     // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
     for (dst_filesystem, back_up_config) in &config.dst_filesystems {
-        if let Some(back_up) = BackUp::new(dst_filesystem, back_up_config, &lsblk)? {
-            back_up.run()?;
+        if let Some(back_ups) = BackUps::new(dst_filesystem, back_up_config, &lsblk)? {
+            back_ups.run()?;
         }
     }
 

@@ -5,12 +5,12 @@ use super::filesystem::Filesystem;
 use super::lsblk::Lsblk;
 
 #[derive(Debug)]
-pub struct BackUp {
+pub struct BackUps {
     dst_filesystem: Filesystem,
     back_up_devices: Vec<Device>,
 }
 
-impl BackUp {
+impl BackUps {
     /// Creates a new `BackUp` instance based on the provided parameters.
     /// It returns `Some(BackUp)` if the destination filesystem is found, otherwise `None` is returned.
     ///
@@ -23,7 +23,7 @@ impl BackUp {
         dst_filesystem_uuid: &String,
         back_up_config: &BackUpConfig,
         lsblk: &Lsblk,
-    ) -> Result<Option<BackUp>, String> {
+    ) -> Result<Option<BackUps>, String> {
         let dst_filesystem = Filesystem::new(dst_filesystem_uuid, &lsblk.available_filesystems)?;
 
         if let Some(dst_filesystem) = dst_filesystem {
@@ -40,7 +40,7 @@ impl BackUp {
                 .filter_map(|x| x)
                 .collect();
 
-            Ok(Some(BackUp {
+            Ok(Some(BackUps {
                 dst_filesystem,
                 back_up_devices,
             }))
@@ -57,7 +57,9 @@ impl BackUp {
         }
 
         for back_up_device in &self.back_up_devices {
-            self.do_backup(back_up_device)?;
+            if let Err(err) = self.do_backup(back_up_device) {
+                eprintln!("Error performing backup: {}", err);
+            }
         }
 
         self.dst_filesystem.unmount()?;
@@ -70,10 +72,6 @@ impl BackUp {
     ///
     /// * `back_up_device` - The device to perform the backup for.
     fn do_backup(&self, back_up_device: &Device) -> Result<(), String> {
-        eprintln!(
-            "DEBUGPRINT[1]: back_up.rs:58: back_up_device={:#?}",
-            back_up_device
-        );
         // continue developing, perform the backup
         Ok(())
     }
