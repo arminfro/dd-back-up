@@ -1,5 +1,6 @@
 pub mod back_up;
 mod config;
+pub mod utils;
 
 use clap::{Parser, Subcommand};
 

@@ -1,3 +1,4 @@
+use crate::dd_back_up::back_up::back_up::BackUp;
 use crate::dd_back_up::config::BackUpConfig;
 
 use super::device::Device;
@@ -72,7 +73,7 @@ impl BackUps {
     ///
     /// * `back_up_device` - The device to perform the backup for.
     fn do_backup(&self, back_up_device: &Device) -> Result<(), String> {
-        // continue developing, perform the backup
-        Ok(())
+        let back_up = BackUp::new(&self.dst_filesystem, &back_up_device);
+        back_up.run()
     }
 }

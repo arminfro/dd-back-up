@@ -5,6 +5,7 @@ use super::lsblk::BlockDevice;
 pub struct Device {
     /// The underlying block device information.
     pub blockdevice: BlockDevice,
+    pub device_path: String,
 }
 
 impl Device {
@@ -18,6 +19,7 @@ impl Device {
         let device =
             Self::validate_present_serial(serial_filtered_lsblk).map(|blockdevice| Device {
                 blockdevice: blockdevice.clone(),
+                device_path: format!("/dev/{}", &blockdevice.name),
             });
 
         Ok(device)
