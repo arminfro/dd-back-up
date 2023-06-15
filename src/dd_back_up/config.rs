@@ -11,7 +11,6 @@ pub struct BackUpConfig {
     /// Strings are identifiers of whole devices.
     /// Identifier can be the serial number or the wwn (world wide name).
     /// Since some devices may not have serial number or even have duplicated serial numbers
-    /// the wwn id may be also used to uniquely identify a device.
     pub back_up_devices: Vec<String>,
 }
 

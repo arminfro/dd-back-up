@@ -9,7 +9,6 @@ pub struct BlockDevice {
     pub serial: Option<String>,
     pub uuid: Option<String>,
     pub mountpoint: Option<String>,
-    pub wwn: Option<String>,
     pub size: String,
 }
 
@@ -73,7 +72,7 @@ impl Lsblk {
     /// - `Err(String)`: If there was an error executing or parsing the lsblk command.
     fn capture_lsblk() -> Result<LsblkOutput, String> {
         let output = Command::new("lsblk")
-            .args(&["-lJ", "-o", "NAME,MODEL,SERIAL,SIZE,MOUNTPOINT,UUID,WWN"])
+            .args(&["-lJ", "-o", "NAME,MODEL,SERIAL,SIZE,MOUNTPOINT,UUID"])
             .stdout(Stdio::piped())
             .output()
             .map_err(|e| format!("Failed to execute lsblk: {}", e))?;

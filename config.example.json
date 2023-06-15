@@ -1,5 +1,5 @@
 {
   "dst-back-up-fs-uuid": {
-    "back_up_devices": ["device-serial-or-wwn-1", "device-serial-or-wwn-2"]
+    "back_up_devices": ["device-serial-1", "device-serial-2"]
   }
 }
