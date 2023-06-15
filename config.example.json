@@ -1,5 +1,19 @@
 {
-  "dst-back-up-fs-uuid": {
-    "back_up_devices": ["device-serial-1", "device-serial-2"]
-  }
+  "mountpath": "/mnt",
+  "backups": [
+    {
+      "uuid": "dst-back-up-fs-uuid",
+      "destination_path": "./",
+      "back_up_devices": [
+        {
+          "serial": "device-serial-1",
+          "name": "desktop"
+        },
+        {
+          "serial": "device-serial-2",
+          "name": "laptop"
+        }
+      ]
+    }
+  ]
 }

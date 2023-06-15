@@ -1,3 +1,5 @@
+use relative_path::RelativePath;
+
 use crate::dd_back_up::utils::current_date;
 
 use super::{command_output::command_output, device::Device, filesystem::Filesystem, RunArgs};
@@ -76,27 +78,30 @@ impl<'a> BackUp<'a> {
 
     /// Returns the output file path for the backup.
     fn output_file_path(&self) -> String {
-        format!(
-            "{}/{}",
-            self.dst_filesystem.blockdevice.mountpoint.clone().unwrap(),
-            self.file_name()
-        )
+        let relative_path =
+            RelativePath::new(&self.dst_filesystem.blockdevice.mountpoint.clone().unwrap())
+                .join_normalized(self.back_up_device.destination_path.clone())
+                .join_normalized(self.file_name())
+                .to_string();
+
+        format!("/{}", relative_path)
     }
 
     /// Generates the file name for the backup image.
     fn file_name(&self) -> String {
         format!(
-            "{}.img",
+            "{}_{}_{}.img",
+            current_date(),
+            self.back_up_device.name,
             vec![
                 self.back_up_device.blockdevice.model.clone(),
                 self.back_up_device.blockdevice.serial.clone(),
-                Some(current_date()),
             ]
             .into_iter()
             .filter_map(|x| x)
             .collect::<Vec<String>>()
-            .join("-")
-            .replace(" ", "_")
+            .join("_")
+            .replace(" ", "-")
         )
     }
 }

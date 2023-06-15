@@ -18,13 +18,12 @@ pub struct RunArgs {
     dry: bool,
 }
 
-pub fn run(back_up_args: &RunArgs, config: Config) -> Result<(), String> {
+pub fn run(back_up_args: &RunArgs, config: &Config) -> Result<(), String> {
     let lsblk = Lsblk::new()?;
     // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
-    for (dst_filesystem, back_up_config) in &config.dst_filesystems {
-        if let Some(back_ups) = BackUps::new(dst_filesystem, back_up_config, &lsblk, back_up_args)?
-        {
+    for back_up_config in &config.backups {
+        if let Some(back_ups) = BackUps::new(back_up_config, &lsblk, back_up_args, config)? {
             back_ups.run()?;
         }
     }

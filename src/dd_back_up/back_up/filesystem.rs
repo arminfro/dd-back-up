@@ -1,21 +1,35 @@
 use super::{command_output::command_output, lsblk::BlockDevice};
 
-const MOUNT_PATH: &str = "/mnt";
-
 /// Represents a filesystem associated with a block device.
 #[derive(Debug)]
 pub struct Filesystem {
     pub blockdevice: BlockDevice,
     pub device_path: String,
+    pub mountpath: Option<String>,
 }
 
 impl Filesystem {
     /// Creates a new `Filesystem` instance for the specified UUID, using the provided `Lsblk` instance.
+    ///
     /// It returns `Ok(Some(Filesystem))` if the UUID is unique and associated with a block device,
-    /// `Ok(None)` if the UUID is not found in the available filesystems, or an error message if the UUID is not unique.
+    /// `Ok(None)` if the UUID is not found in the available filesystems,
+    /// or an error message if the UUID is not unique.
+    ///
+    /// # Arguments
+    ///
+    /// * `uuid` - The UUID of the filesystem.
+    /// * `available_filesystems` - The list of available block devices to search for a matching UUID.
+    /// * `mountpath` - The optional mount path of the filesystem.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(Some(Filesystem))`: If a unique match is found based on the UUID.
+    /// - `Ok(None)`: If no match is found based on the UUID.
+    /// - `Err(String)`: If the UUID is not unique among the available filesystems.
     pub fn new(
         uuid: &str,
         available_filesystems: &Vec<BlockDevice>,
+        mountpath: Option<String>,
     ) -> Result<Option<Filesystem>, String> {
         let uuid_filtered_lsblk = Self::validate_uuid_uniq(uuid, available_filesystems)?;
 
@@ -23,6 +37,7 @@ impl Filesystem {
             Some(blockdevice) => Ok(Some(Filesystem {
                 blockdevice: blockdevice.clone(),
                 device_path: format!("/dev/{}", &blockdevice.name),
+                mountpath,
             })),
             None => Ok(None),
         }
@@ -41,10 +56,10 @@ impl Filesystem {
 
     /// Validates if the UUID is unique among the available filesystems.
     /// Returns a filtered list of block devices with the specified UUID, or an error if the UUID is not unique.
-    fn validate_uuid_uniq<'a>(
+    fn validate_uuid_uniq<'b>(
         uuid: &str,
-        available_filesystems: &'a Vec<BlockDevice>,
-    ) -> Result<Vec<&'a BlockDevice>, String> {
+        available_filesystems: &'b Vec<BlockDevice>,
+    ) -> Result<Vec<&'b BlockDevice>, String> {
         let uuid_filtered_lsblk: Vec<&BlockDevice> = available_filesystems
             .iter()
             .filter(|filesystem| filesystem.uuid.as_deref() == Some(uuid))
@@ -66,14 +81,15 @@ impl Filesystem {
     /// Mounts the device.
     /// Returns `Ok(())` if the device is mounted successfully, otherwise returns an error message.
     pub fn mount(&mut self) -> Result<(), String> {
+        let mount_path = self.mount_path();
         let output = command_output(
-            vec!["mount", &self.device_path, MOUNT_PATH],
-            &format!("mount filesystem {} at {}", self.device_path, MOUNT_PATH),
+            vec!["mount", &self.device_path, &mount_path],
+            &format!("mount filesystem {} at {}", self.device_path, mount_path),
             Some(true),
         )?;
 
         if output.status.success() {
-            self.blockdevice.mountpoint = Some(MOUNT_PATH.to_string());
+            self.blockdevice.mountpoint = Some(mount_path);
             println!("Filesystem mounted successfully");
             Ok(())
         } else {
@@ -88,7 +104,7 @@ impl Filesystem {
             .blockdevice
             .mountpoint
             .clone()
-            .ok_or_else(|| MOUNT_PATH)?;
+            .ok_or_else(|| self.mount_path())?;
 
         let output = command_output(
             vec!["umount", &mountpoint],
@@ -108,5 +124,9 @@ impl Filesystem {
                 String::from_utf8_lossy(&output.stderr).to_string()
             ))
         }
+    }
+
+    fn mount_path(&self) -> String {
+        self.mountpath.clone().unwrap_or("/mnt".to_string())
     }
 }

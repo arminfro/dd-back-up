@@ -29,7 +29,7 @@ pub fn run() -> Result<(), String> {
 
     match &cli.command {
         Commands::Run(args) => {
-            back_up_run(args, config).map_err(|e| format!("Failed to run backups: {}", e))
+            back_up_run(args, &config).map_err(|e| format!("Failed to run backups: {}", e))
         }
     }
 }

@@ -3,23 +3,57 @@ It allows you to back up specific devices to a designated filesystem or partitio
 
 ## Usage:
 
-To use dd-back-up, you need to configure the backup settings in a JSON configuration file located at `~/.dd-back-up/config.json`.
-The configuration file should have the following structure:
+To use dd-back-up, you need to configure the backup settings in a JSON configuration file.
+
+### Configuration
+
+The configuration file (`~/.dd-back-up/config.json`) is used to specify the backup configurations. It has the following structure:
 
 ```json
 {
-  "83d1b338-d7c8-48cd-b081-c4eb10948414": {
-    "back_up_devices": ["10270080900002B1", "NM13P0Y3"]
-  },
-  ...
-  "some-uuid": { "back_up_devices": ["some-serial"] },
+  "mountpath": "/mnt",
+  "backups": [
+    {
+      "uuid": "dst-back-up-fs-uuid-1",
+      "destination_path": "./",
+      "back_up_devices": [
+        {
+          "serial": "device-serial-1",
+          "name": "desktop"
+        },
+        {
+          "serial": "device-serial-2",
+          "name": "laptop"
+        }
+      ]
+    },
+    {
+      "uuid": "dst-back-up-fs-uuid-2",
+      ...
+    }
+  ]
 }
 ```
 
-- "83d1b338-d7c8-48cd-b081-c4eb10948414" represents the UUID (Universally Unique Identifier) of the partition or filesystem where the backup should be saved.
-  - You can obtain the UUID using utilities such as `lsblk -n -o NAME,UUID`.
-- "back_up_devices" is an array of identifiers representing the devices to be backed up. Each identifier corresponds to a specific device that you want to backup. In the example above, "10270080900002B1" and "NM13P0Y3" are used as identifiers.
-  - You can find the serial number of a device on the device itself or use tools like `lsblk -n -o NAME,SERIAL` to list devices with their serial numbers.
+Explanation:
+
+- `mountpath`: The path on which the destination filesystem will be mounted. This path is used as the base directory for specifying the destination path of each backup.
+
+  - Optional, defaults to "/mnt"
+
+- `backups`: An array of backup configurations. Each configuration specifies a destination backup filesystem or partition and the devices to be backed up on that filesystem.
+
+  - `uuid`: The UUID of the destination backup filesystem or partition.
+
+    - obtain the uuid with tools like `lsblk -n -o NAME,UUID`
+
+  - `destination_path`: The destination path where the backup will be stored. This path is relative to the mountpath. If not provided, the backup will be stored in the root of the mountpath.
+
+    - Optional, defaults to "./"
+
+  - `back_up_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
+
+    - obtain the serial with tools like `lsblk -n -o NAME,SERIAL`
 
 You can configure multiple backup devices for a single backup filesystem by adding additional entries under different UUIDs in the configuration file.
 
@@ -33,10 +67,10 @@ Once you have configured the backup settings, you can run the backup process by 
 dd-back-up run [--dry]
 ```
 
-The "back-up" command will read the configuration file, mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
-The backup will be saved in the root directory of the mounted filesystem. The file will have a name like `Micro_Line-10170080900002B1-2023-06-15.img`, containing model, serial and date.
+The "back-up" command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
+The backup will be saved in the root directory of the mounted filesystem. The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the backup device name, the model, the serial and the date.
 
-Please note that the dd command is used under the hood to perform the actual backup. Make sure to exercise caution when specifying the backup devices and the target filesystem/partition and use the `--dry` flag to see what devices would be backed up before running it.
+Make sure to exercise caution when specifying the backup devices and the target filesystem/partition and use the `--dry` flag to see what devices would be backed up before running it.
 
 License:
 

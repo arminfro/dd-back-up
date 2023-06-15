@@ -1,5 +1,5 @@
 use crate::dd_back_up::back_up::back_up::BackUp;
-use crate::dd_back_up::config::BackUpConfig;
+use crate::dd_back_up::config::{BackUpConfig, Config};
 
 use super::device::Device;
 use super::filesystem::Filesystem;
@@ -19,22 +19,40 @@ impl<'a> BackUps<'a> {
     ///
     /// # Arguments
     ///
-    /// * `dst_filesystem_uuid` - The UUID of the destination filesystem.
     /// * `back_up_config` - The backup configuration.
     /// * `lsblk` - The `Lsblk` instance containing available filesystems and devices.
+    /// * `back_up_args` - The command-line arguments for the backup operation.
+    /// * `config` - The global configuration.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(Some(BackUps))`: If the destination filesystem is found and the backup is configured.
+    /// - `Ok(None)`: If the destination filesystem is not found or not configured for backup.
+    /// - `Err(String)`: If there is an error during the process.
     pub fn new(
-        dst_filesystem_uuid: &String,
         back_up_config: &BackUpConfig,
         lsblk: &Lsblk,
         back_up_args: &'a RunArgs,
+        config: &'a Config,
     ) -> Result<Option<BackUps<'a>>, String> {
-        let dst_filesystem = Filesystem::new(dst_filesystem_uuid, &lsblk.available_filesystems)?;
+        let dst_filesystem = Filesystem::new(
+            &back_up_config.uuid,
+            &lsblk.available_filesystems,
+            config.mountpath.clone(),
+        )?;
 
         if let Some(dst_filesystem) = dst_filesystem {
             let back_up_devices_result: Result<Vec<_>, _> = back_up_config
                 .back_up_devices
                 .iter()
-                .map(|back_up_device| Device::new(back_up_device, &lsblk.available_devices))
+                .map(|back_up_device| {
+                    Device::new(
+                        &back_up_device.serial,
+                        &back_up_device.name,
+                        &lsblk.available_devices,
+                        back_up_config.destination_path.clone(),
+                    )
+                })
                 .collect();
 
             // Unwrap the `Result<Vec<Device>, String>` and filter out any `None` values using `filter_map`
