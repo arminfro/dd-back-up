@@ -1,5 +1,11 @@
 `dd-back-up` is a command-line tool written in Rust that performs block device backups using the `dd` command.
-It allows you to back up specific devices to a designated filesystem or partition.
+It allows you to back up specific devices to a designated filesystem or partition on a Linux system.
+
+## Installation
+
+```shell
+git clone https://github.com/arminfro/dd-back-up.git && cd dd-back-up && cargo install --path .
+```
 
 ## Usage:
 
@@ -28,7 +34,6 @@ The configuration file (`~/.dd-back-up/config.json`) is used to specify the back
       ]
     },
     {
-      "uuid": "dst-back-up-fs-uuid-2",
       ...
     }
   ]
@@ -54,8 +59,6 @@ Explanation:
   - `back_up_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
 
     - obtain the serial with tools like `lsblk -n -o NAME,SERIAL`
-
-You can configure multiple backup devices for a single backup filesystem by adding additional entries under different UUIDs in the configuration file.
 
 The program allows you to configure backup for all devices, whether they are currently connected or not. It checks for the presence of the filesystem and the device. If either of them is not found, the corresponding pair will be skipped during the backup process.
 
