@@ -5,7 +5,7 @@ pub mod utils;
 use clap::{Parser, Subcommand};
 
 use self::{
-    back_up::{run as back_up_run, BackUpArgs},
+    back_up::{run as back_up_run, RunArgs},
     config::Config,
 };
 
@@ -19,7 +19,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    BackUp(BackUpArgs),
+    Run(RunArgs),
 }
 
 pub fn run() -> Result<(), String> {
@@ -28,7 +28,7 @@ pub fn run() -> Result<(), String> {
         Config::new().map_err(|e| format!("Failed to create Config struct object: {}", e))?;
 
     match &cli.command {
-        Commands::BackUp(args) => {
+        Commands::Run(args) => {
             back_up_run(args, config).map_err(|e| format!("Failed to run backups: {}", e))
         }
     }

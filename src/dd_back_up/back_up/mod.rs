@@ -12,9 +12,9 @@ use super::back_up::lsblk::Lsblk;
 use super::config::Config;
 
 #[derive(Args, Debug)]
-pub struct BackUpArgs {}
+pub struct RunArgs {}
 
-pub fn run(back_up_args: &BackUpArgs, config: Config) -> Result<(), String> {
+pub fn run(back_up_args: &RunArgs, config: Config) -> Result<(), String> {
     eprintln!("DEBUGPRINT[1]: mod.rs:15: back_up_args={:#?}", back_up_args);
     let lsblk = Lsblk::new()?;
     // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
