@@ -84,9 +84,15 @@ impl Filesystem {
     /// Unmounts the device.
     /// Returns `Ok(())` if the device is unmounted successfully, otherwise returns an error message.
     pub fn unmount(&mut self) -> Result<(), String> {
+        let mountpoint = self
+            .blockdevice
+            .mountpoint
+            .clone()
+            .ok_or_else(|| MOUNT_PATH)?;
+
         let output = command_output(
-            vec!["umount", MOUNT_PATH],
-            &format!("unmount filesystem {} at {}", self.device_path, MOUNT_PATH),
+            vec!["umount", &mountpoint],
+            &format!("unmount filesystem {} at {}", self.device_path, &mountpoint),
             Some(true),
         )?;
 
@@ -95,7 +101,12 @@ impl Filesystem {
             println!("Filesystem unmounted successfully");
             Ok(())
         } else {
-            Err(format!("Error unmounting filesystem {}", self.device_path))
+            Err(format!(
+                "Error unmounting filesystem {} at {}: {}",
+                self.device_path,
+                &mountpoint,
+                String::from_utf8_lossy(&output.stderr).to_string()
+            ))
         }
     }
 }
