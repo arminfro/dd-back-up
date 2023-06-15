@@ -4,14 +4,16 @@ use crate::dd_back_up::config::BackUpConfig;
 use super::device::Device;
 use super::filesystem::Filesystem;
 use super::lsblk::Lsblk;
+use super::RunArgs;
 
 #[derive(Debug)]
-pub struct BackUps {
+pub struct BackUps<'a> {
     dst_filesystem: Filesystem,
     back_up_devices: Vec<Device>,
+    back_up_args: &'a RunArgs,
 }
 
-impl BackUps {
+impl<'a> BackUps<'a> {
     /// Creates a new `BackUp` instance based on the provided parameters.
     /// It returns `Some(BackUp)` if the destination filesystem is found, otherwise `None` is returned.
     ///
@@ -24,7 +26,8 @@ impl BackUps {
         dst_filesystem_uuid: &String,
         back_up_config: &BackUpConfig,
         lsblk: &Lsblk,
-    ) -> Result<Option<BackUps>, String> {
+        back_up_args: &'a RunArgs,
+    ) -> Result<Option<BackUps<'a>>, String> {
         let dst_filesystem = Filesystem::new(dst_filesystem_uuid, &lsblk.available_filesystems)?;
 
         if let Some(dst_filesystem) = dst_filesystem {
@@ -44,6 +47,7 @@ impl BackUps {
             Ok(Some(BackUps {
                 dst_filesystem,
                 back_up_devices,
+                back_up_args,
             }))
         } else {
             Ok(None)
@@ -73,7 +77,7 @@ impl BackUps {
     ///
     /// * `back_up_device` - The device to perform the backup for.
     fn do_backup(&self, back_up_device: &Device) -> Result<(), String> {
-        let back_up = BackUp::new(&self.dst_filesystem, &back_up_device);
+        let back_up = BackUp::new(&self.dst_filesystem, &back_up_device, self.back_up_args);
         back_up.run()
     }
 }
