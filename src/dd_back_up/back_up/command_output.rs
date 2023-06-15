@@ -1,12 +1,18 @@
 use std::process::{Command, Output};
 
 /// Executes a command and captures its output.
+/// Command output is still printed to stdout and stderr.
 ///
 /// # Arguments
 ///
 /// * `command_parts` - The parts of the command.
 /// * `description` - The description of the command.
-/// * `use_sudo` - Indicates whether sudo should be used for the command (if available).
+/// * `is_sudo_needed` - Indicates whether sudo should be used for the command (if available).
+///
+/// # Returns
+///
+/// * `Ok(output)` if the command executes successfully and captures the output.
+/// * `Err` with an error message if the command encounters an error.
 pub fn command_output(
     command_parts: Vec<&str>,
     description: &str,
@@ -20,10 +26,26 @@ pub fn command_output(
         }
     };
 
-    Command::new(&command_parts[0])
+    match Command::new(&command_parts[0])
         .args(&command_parts[1..])
-        .output()
-        .map_err(|e| format!("Failed to {}: {}", description, e.to_string()))
+        .spawn()
+    {
+        Ok(child) => {
+            let output = child.wait_with_output().map_err(|e| e.to_string())?;
+            if output.status.success() {
+                Ok(output)
+            } else {
+                let error = format!(
+                    "Error running {}: {}",
+                    &command_parts.join(" "),
+                    String::from_utf8_lossy(&output.stderr).to_string()
+                );
+                eprintln!("{}", &error);
+                Err(error)
+            }
+        }
+        Err(err) => Err(err.to_string()),
+    }
 }
 
 fn append_sudo_if_available<'a>(
