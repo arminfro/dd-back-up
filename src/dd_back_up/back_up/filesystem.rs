@@ -2,7 +2,10 @@ use std::{fs, path::Path};
 
 use crate::dd_back_up::utils::convert_to_byte_size;
 
-use super::{command_output::command_output, lsblk::BlockDevice};
+use super::{
+    command_output::command_output,
+    lsblk::{BlockDevice, Lsblk},
+};
 
 /// Represents a filesystem associated with a block device.
 #[derive(Debug)]
@@ -203,11 +206,20 @@ impl Filesystem {
     }
 
     /// Returns the available space of the block device, converted to bytes, or None if the size is unavailable / readable.
-    pub fn available_space(&self) -> Option<u64> {
-        self.blockdevice
+    pub fn available_space(&self) -> Result<Option<u64>, String> {
+        let device_uuid = self.blockdevice.uuid.clone();
+        // needs a new lsblk instance, since the filesystem size is only accessible if mounted
+        let lsblk = Lsblk::new()?;
+        let filesystem = lsblk
+            .available_filesystems
+            .iter()
+            .find(|fs| fs.uuid == device_uuid)
+            .unwrap();
+
+        Ok(filesystem
             .fsavail
             .clone()
             .map(|fsavail| convert_to_byte_size(&fsavail).unwrap_or(None))
-            .unwrap_or(None)
+            .unwrap_or(None))
     }
 }

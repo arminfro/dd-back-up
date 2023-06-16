@@ -202,7 +202,7 @@ impl<'a> BackUp<'a> {
     /// If there is not enough space, an error is returned with a descriptive message.
     /// If either available_space or needed_space is None then proceed with an Ok as well.
     fn check_if_target_filesystem_has_enough_space(&self) -> Result<(), String> {
-        let available_space = self.dst_filesystem.available_space();
+        let available_space = self.dst_filesystem.available_space()?;
         let needed_space = self.back_up_device.total_size()?;
 
         if let Some(available_space) = available_space {
