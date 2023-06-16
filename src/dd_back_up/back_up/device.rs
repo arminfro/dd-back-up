@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::dd_back_up::config::BackUpDevice;
+use crate::dd_back_up::{config::BackUpDevice, utils::convert_to_byte_size};
 
 use super::lsblk::BlockDevice;
 
@@ -117,5 +117,10 @@ impl Device {
             }
         }
         Ok(false)
+    }
+
+    /// Returns the total size of the block device, converted to bytes, or None if the size is unavailable.
+    pub fn total_size(&self) -> Result<Option<u64>, String> {
+        convert_to_byte_size(&self.blockdevice.size)
     }
 }

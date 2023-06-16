@@ -1,4 +1,4 @@
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 
 /// Executes a command and captures its output.
 /// Command output is still printed to stdout and stderr.
@@ -28,6 +28,7 @@ pub fn command_output(
 
     match Command::new(&command_parts[0])
         .args(&command_parts[1..])
+        .stdout(Stdio::piped())
         .spawn()
     {
         Ok(child) => {

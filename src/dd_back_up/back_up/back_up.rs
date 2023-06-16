@@ -41,8 +41,8 @@ impl<'a> BackUp<'a> {
     /// * `Ok(())` if the backup process is successful.
     /// * `Err` with an error message if the backup process encounters an error.
     pub fn run(&self) -> Result<(), String> {
-        self.check_if_target_file_is_present()?;
-        self.delete_oldest_backup_if_needed()?;
+        self.validate_state()?;
+
         let input_file_arg = format!("if={}", self.input_file_path());
         let output_file_arg = format!("of={}", self.back_up_file_path());
         let command_parts = vec!["dd", &input_file_arg, &output_file_arg, "status=progress"];
@@ -169,14 +169,57 @@ impl<'a> BackUp<'a> {
         present_number_of_copies >= self.back_up_device.copies as usize
     }
 
-    /// Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
-    fn delete_oldest_backup_if_needed(&self) -> Result<(), String> {
-        if self.needs_deletion() && !self.back_up_args.dry {
-            self.dst_filesystem
-                .delete_oldest_backup(&self.stable_postfix_file_name(), &self.back_up_dir_path())
-        } else {
-            Ok(())
+    /// Validates the state of the backup process by performing the following checks:
+    /// 1. Checks if the target file is already present. If it is, an error is returned.
+    /// 2. Checks if the oldest backup needs to be deleted based on the configured number of copies.
+    ///    If a deletion is required, the oldest backup is deleted.
+    /// 3. If no deletion is needed, checks if the target filesystem has enough space to accommodate
+    ///    the new backup. If there is insufficient space, an error is returned.
+    /// If all checks pass, `Ok(())` is returned indicating that the state is valid and the backup
+    /// process can proceed.
+    fn validate_state(&self) -> Result<(), String> {
+        self.check_if_target_file_is_present()?;
+        let needed_deletion = self.delete_oldest_backup_if_needed()?;
+        if !needed_deletion {
+            self.check_if_target_filesystem_has_enough_space()?;
         }
+        Ok(())
+    }
+
+    /// Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
+    fn delete_oldest_backup_if_needed(&self) -> Result<bool, String> {
+        let needs_deletion = self.needs_deletion();
+        if needs_deletion && !self.back_up_args.dry {
+            self.dst_filesystem
+                .delete_oldest_backup(&self.stable_postfix_file_name(), &self.back_up_dir_path())?;
+        }
+        Ok(needs_deletion)
+    }
+
+    /// Checks if the target filesystem has enough space to accommodate the backup of the device.
+    /// It compares the available space on the filesystem with the total size of the device to be backed up.
+    /// If there is sufficient space, `Ok(())` is returned, indicating that the backup can proceed.
+    /// If there is not enough space, an error is returned with a descriptive message.
+    /// If either available_space or needed_space is None then proceed with an Ok as well.
+    fn check_if_target_filesystem_has_enough_space(&self) -> Result<(), String> {
+        let available_space = self.dst_filesystem.available_space();
+        let needed_space = self.back_up_device.total_size()?;
+
+        if let Some(available_space) = available_space {
+            if let Some(needed_space) = needed_space {
+                let remaining_space: i64 = available_space as i64 - needed_space as i64;
+                if remaining_space > 0 {
+                    return Ok(());
+                } else {
+                    return Err(format!(
+                        "Not enough space on destination filesystem {}, to backup device {}",
+                        self.dst_filesystem.device_path, self.back_up_device.device_path
+                    ));
+                }
+            }
+        }
+        println!("Could not check if sufficient space is available");
+        Ok(())
     }
 
     /// Checks if the target backup file is already present.

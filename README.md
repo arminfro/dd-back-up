@@ -56,6 +56,8 @@ The configuration file (`~/.config/dd-back-up/config.json`) is used to specify t
 
     - Optional, defaults to "./"
 
+    - Note: If you want to use subdirs, create them manually
+
   - `back_up_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
 
     - obtain the serial with tools like `lsblk -n -o NAME,SERIAL`
@@ -64,9 +66,13 @@ The configuration file (`~/.config/dd-back-up/config.json`) is used to specify t
 
       - Optional, defaults to 1
 
-      - Note: If you decrease the value of copies after a while, you may need to manually delete backup files until you have the desired number of copies. Otherwise, the program will continue to delete only one backup per run, resulting in the same count as before.
+      - Note: If you decrease the value of copies after a while, you may need to manually delete backup files until you have the desired number of copies. Otherwise, the program will continue to delete only one backup per run, which may result in the same count as before decreasing.
 
-The program allows you to configure backup for all devices, whether they are currently connected or not. It checks for the presence of the filesystem and the device. If either of them is not found, the corresponding pair will be skipped during the backup process.
+      - Note: To obtain the number of present copies the program will use the last two values of the image name (model and serial). If you want to keep a copy which will not be managed by the application append some value to the filename.
+
+The program allows you to configure backups for all your backup devices, whether they are currently connected or not.
+It checks for the presence of the filesystem and the device.
+If either of them is not found, the corresponding pair will be skipped during the backup process.
 
 ### Running the Backup:
 

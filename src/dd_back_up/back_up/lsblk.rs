@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::process::{Command, Stdio};
+
+use super::command_output::command_output;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BlockDevice {
@@ -16,6 +17,8 @@ pub struct BlockDevice {
     pub mountpoint: Option<String>,
     /// The size of the block device.
     pub size: String,
+    // The available size of the block device
+    pub fsavail: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -80,11 +83,16 @@ impl Lsblk {
     /// - `Ok(LsblkOutput)`: If the lsblk command was successful and the JSON output was parsed correctly.
     /// - `Err(String)`: If there was an error executing or parsing the lsblk command.
     fn capture_lsblk() -> Result<LsblkOutput, String> {
-        let output = Command::new("lsblk")
-            .args(&["-lJ", "-o", "NAME,MODEL,SERIAL,SIZE,MOUNTPOINT,UUID"])
-            .stdout(Stdio::piped())
-            .output()
-            .map_err(|e| format!("Failed to execute lsblk: {}", e))?;
+        let output = command_output(
+            vec![
+                "lsblk",
+                "-lJ",
+                "-o",
+                "NAME,MODEL,SERIAL,SIZE,MOUNTPOINT,UUID,FSAVAIL",
+            ],
+            "execute lsblk",
+            Some(false),
+        )?;
 
         if output.status.success() {
             let stdout = output.stdout;

@@ -10,6 +10,7 @@ chrono = "0.4.26"
 clap = { version = "4.3.3", features = ["derive"] }
 dirs = "5.0.1"
 libc = "0.2.146"
+nix = "0.26.2"
 relative-path = "1.8.0"
 serde  = {version="1.0.164", features = ["derive"] }
 serde_json = "1.0.96"
