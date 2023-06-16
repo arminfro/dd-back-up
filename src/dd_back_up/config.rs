@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashSet,
     fs::{self, File},
     path::PathBuf,
 };
@@ -49,7 +50,7 @@ impl Config {
     /// - `Ok(Config)`: If the configuration file is successfully read and parsed.
     /// - `Err(String)`: If there is an error reading or parsing the configuration file.
     pub fn new(config_file_path: &Option<String>) -> Result<Config, String> {
-        Self::read_config_file(config_file_path)
+        Self::validate_config(Self::read_config_file(config_file_path))
     }
 
     /// Reads the configuration file and returns a `HashMap` of destination devices to `BackUpConfig`.
@@ -58,7 +59,7 @@ impl Config {
     ///
     /// - `Ok(HashMap<String, BackUpConfig>)`: If the configuration file is successfully read and parsed.
     /// - `Err(String)`: If there is an error reading or parsing the configuration file.
-    pub fn read_config_file(config_file_path: &Option<String>) -> Result<Config, String> {
+    fn read_config_file(config_file_path: &Option<String>) -> Result<Config, String> {
         let config_file_path = match config_file_path {
             Some(path_string) => Ok(PathBuf::from(path_string)),
             None => Self::default_config_file_path(),
@@ -72,6 +73,43 @@ impl Config {
             }
             Err(e) => Err(e.to_string()),
         }
+    }
+
+    /// Validates the configuration to ensure unique UUIDs and serial numbers.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration to validate.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(Config)`: If the configuration is valid.
+    /// - `Err(String)`: If the configuration is not valid, with a descriptive error message.
+    fn validate_config(config: Result<Config, String>) -> Result<Config, String> {
+        let config = config?;
+
+        // Check for unique UUIDs
+        let uuids: HashSet<&String> = config.backups.iter().map(|backup| &backup.uuid).collect();
+        if uuids.len() != config.backups.len() {
+            return Err("Duplicate UUID found in backups".to_string());
+        }
+
+        // Check for unique serial numbers within each backup
+        for backup in &config.backups {
+            let serials: HashSet<&String> = backup
+                .back_up_devices
+                .iter()
+                .map(|device| &device.serial)
+                .collect();
+            if serials.len() != backup.back_up_devices.len() {
+                return Err(format!(
+                    "Duplicate serial number found in backup with UUID '{}'",
+                    backup.uuid
+                ));
+            }
+        }
+
+        Ok(config)
     }
 
     /// Returns the default path to the configuration file.
