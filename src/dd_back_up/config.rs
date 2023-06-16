@@ -48,8 +48,8 @@ impl Config {
     ///
     /// - `Ok(Config)`: If the configuration file is successfully read and parsed.
     /// - `Err(String)`: If there is an error reading or parsing the configuration file.
-    pub fn new() -> Result<Config, String> {
-        Self::read_config_file()
+    pub fn new(config_file_path: &Option<String>) -> Result<Config, String> {
+        Self::read_config_file(config_file_path)
     }
 
     /// Reads the configuration file and returns a `HashMap` of destination devices to `BackUpConfig`.
@@ -58,8 +58,13 @@ impl Config {
     ///
     /// - `Ok(HashMap<String, BackUpConfig>)`: If the configuration file is successfully read and parsed.
     /// - `Err(String)`: If there is an error reading or parsing the configuration file.
-    pub fn read_config_file() -> Result<Config, String> {
-        match File::open(Self::config_file_path()?) {
+    pub fn read_config_file(config_file_path: &Option<String>) -> Result<Config, String> {
+        let config_file_path = match config_file_path {
+            Some(path_string) => Ok(PathBuf::from(path_string)),
+            None => Self::default_config_file_path(),
+        };
+
+        match File::open(config_file_path?) {
             Ok(config_file) => {
                 let parsed_config: Result<Config, _> = serde_json::from_reader(config_file);
 
@@ -69,13 +74,13 @@ impl Config {
         }
     }
 
-    /// Returns the path to the configuration file.
+    /// Returns the default path to the configuration file.
     ///
     /// # Returns
     ///
     /// - `Ok(PathBuf)`: The path to the configuration file if it exists.
     /// - `Err(String)`: If there is an error getting the configuration file path or the path doesn't exist.
-    pub fn config_file_path() -> Result<PathBuf, String> {
+    pub fn default_config_file_path() -> Result<PathBuf, String> {
         Ok(Self::config_home_path()
             .map_err(|e| format!("Failed reading or creating data directory -> {}", e))?
             .join("config.json"))
@@ -91,7 +96,8 @@ impl Config {
     pub fn config_home_path() -> Result<PathBuf, String> {
         let data_dir = dirs::home_dir()
             .ok_or("Failed to find Home dir")?
-            .join(".dd-back-up");
+            .join(".config")
+            .join("dd-back-up");
 
         if !data_dir.exists() {
             Self::create_data_directory(&data_dir)?;

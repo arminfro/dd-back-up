@@ -46,7 +46,7 @@ impl<'a> BackUp<'a> {
         match self.back_up_args.dry {
             true => {
                 println!(
-                    "[Dry-Run] backup would be run with dd command: {}",
+                    "[Dry-Run] backup would run with command: {}",
                     &command_parts.join(" "),
                 );
                 Ok(())

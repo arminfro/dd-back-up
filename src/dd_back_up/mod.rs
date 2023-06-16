@@ -19,16 +19,17 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Perform the backups
     Run(RunArgs),
 }
 
 pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
-    let config =
-        Config::new().map_err(|e| format!("Failed to create Config struct object: {}", e))?;
 
     match &cli.command {
         Commands::Run(args) => {
+            let config = Config::new(&args.config_file_path)
+                .map_err(|e| format!("Failed to create Config struct object: {}", e))?;
             back_up_run(args, &config).map_err(|e| format!("Failed to run backups: {}", e))
         }
     }

@@ -13,7 +13,7 @@ To use dd-back-up, you need to configure the backup settings in a JSON configura
 
 ### Configuration
 
-The configuration file (`~/.dd-back-up/config.json`) is used to specify the backup configurations. It has the following structure:
+The configuration file (`~/.config/dd-back-up/config.json`) is used to specify the backup configurations. It has the following structure:
 
 ```json
 {
@@ -40,8 +40,6 @@ The configuration file (`~/.dd-back-up/config.json`) is used to specify the back
 }
 ```
 
-Explanation:
-
 - `mountpath`: The path on which the destination filesystem will be mounted. This path is used as the base directory for specifying the destination path of each backup.
 
   - Optional, defaults to "/mnt"
@@ -64,14 +62,20 @@ The program allows you to configure backup for all devices, whether they are cur
 
 ### Running the Backup:
 
-Once you have configured the backup settings, you can run the backup process by executing the following command:
+Once you have configured the backup settings, you can run the backup process by executing `dd-back-up run`.
 
 ```shell
-dd-back-up run [--dry]
+Usage: dd-back-up run [OPTIONS]
+
+Options:
+  -d, --dry
+          performs a dry run, no dd operation, just to see the output
+  -c, --config-file-path <CONFIG_FILE_PATH>
+          pass in the path of the config file
 ```
 
-The "back-up" command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
-The backup will be saved in the root directory of the mounted filesystem. The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the backup device name, the model, the serial and the date.
+The "run" command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
+The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the date, the backup device name, the model and the serial.
 
 Make sure to exercise caution when specifying the backup devices and the target filesystem/partition and use the `--dry` flag to see what devices would be backed up before running it.
 

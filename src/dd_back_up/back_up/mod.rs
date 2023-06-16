@@ -16,6 +16,9 @@ pub struct RunArgs {
     /// performs a dry run, no dd operation, just to see the output
     #[clap(short, long, default_value = "false")]
     dry: bool,
+    /// pass in the path of the config file
+    #[clap(short, long)]
+    pub config_file_path: Option<String>,
 }
 
 pub fn run(back_up_args: &RunArgs, config: &Config) -> Result<(), String> {
