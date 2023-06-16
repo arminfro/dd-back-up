@@ -50,8 +50,7 @@ impl<'a> BackUps<'a> {
                 .iter()
                 .map(|back_up_device| {
                     Device::new(
-                        &back_up_device.serial,
-                        &back_up_device.name,
+                        &back_up_device,
                         &lsblk.available_devices,
                         back_up_config.destination_path.clone(),
                     )

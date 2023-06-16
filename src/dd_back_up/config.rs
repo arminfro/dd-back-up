@@ -11,6 +11,12 @@ pub struct BackUpDevice {
     pub serial: String,
     /// An optional name for the device.
     pub name: Option<String>,
+    /// The number of copies to be kept for this device.
+    ///
+    /// If set to `None`, only one copy will be kept.
+    /// If set to a positive integer, the oldest copies will be deleted when the limit is reached.
+    /// If set to 0, Config::validate_config will return Err(String).
+    pub copies: Option<usize>,
 }
 
 /// Represents the configuration for a single backup.
@@ -94,8 +100,8 @@ impl Config {
             return Err("Duplicate UUID found in backups".to_string());
         }
 
-        // Check for unique serial numbers within each backup
         for backup in &config.backups {
+            // Check for unique serial numbers within each backup
             let serials: HashSet<&String> = backup
                 .back_up_devices
                 .iter()
@@ -106,6 +112,18 @@ impl Config {
                     "Duplicate serial number found in backup with UUID '{}'",
                     backup.uuid
                 ));
+            }
+
+            // Check if the number of copies is specified and greater than 0
+            for device in &backup.back_up_devices {
+                if let Some(copies) = device.copies {
+                    if copies <= 0 {
+                        return Err(format!(
+                        "Invalid number of copies for device with serial '{}'. Must be greater than 0.",
+                        device.serial
+                    ));
+                    }
+                }
             }
         }
 
