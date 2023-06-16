@@ -77,8 +77,8 @@ Options:
 The "run" command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
 The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the date, the backup device name, the model and the serial.
 
-Make sure to exercise caution when specifying the backup devices and the target filesystem/partition and use the `--dry` flag to see what devices would be backed up before running it.
+Make sure to exercise caution when specifying the backup devices and the target filesystem/partition.
+Use the `--dry` flag to see what devices would be backed up before running it.
 
 License:
-
 This project is licensed under the MIT license.
