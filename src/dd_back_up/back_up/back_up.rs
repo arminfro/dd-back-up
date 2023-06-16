@@ -62,7 +62,7 @@ impl<'a> BackUp<'a> {
                         String::from_utf8_lossy(&output.stdout).to_string()
                     );
 
-                    Ok(())
+                    self.chown()
                 } else {
                     Err(format!(
                         "Error running dd command {}: {}",
@@ -72,6 +72,32 @@ impl<'a> BackUp<'a> {
                 }
             }
         }
+    }
+
+    /// Sets the owner of the backup file to the current user ID and group ID.
+    ///
+    /// This function changes the owner of the backup file specified by `output_file_path`
+    /// to the current user and group. It uses the `chown` command to perform the operation.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())`: If the operation is successful.
+    /// - `Err(String)`: If an error occurs during the operation.
+    fn chown(&self) -> Result<(), String> {
+        let output_file_path = self.output_file_path();
+
+        // Retrieve the current user and group IDs
+        let user_id = unsafe { libc::getuid() };
+        let group_id = unsafe { libc::getgid() };
+
+        let user_group_id_arg = format!("{}:{}", user_id, group_id);
+        let command_parts = vec!["chown", &user_group_id_arg, &output_file_path];
+        command_output(
+            command_parts,
+            "change owner of backup file to $UID",
+            Some(true),
+        )
+        .map(|_| ())
     }
 
     /// Returns the input file path for the backup.
