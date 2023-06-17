@@ -125,6 +125,8 @@ impl Filesystem {
             .clone()
             .ok_or(self.mountpath.clone())?;
 
+        command_output(vec!["sync"], "execute sync", Some(false))?;
+
         let output = command_output(
             vec!["umount", &mountpoint],
             &format!("unmount filesystem {} at {}", self.device_path, &mountpoint),
