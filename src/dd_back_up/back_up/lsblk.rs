@@ -95,9 +95,7 @@ impl Lsblk {
         )?;
 
         if output.status.success() {
-            let stdout = output.stdout;
-            let stdout_str = String::from_utf8_lossy(&stdout).to_string();
-
+            let stdout_str = String::from_utf8_lossy(&output.stdout).to_string();
             let lsblk_output: LsblkOutput = serde_json::from_str(&stdout_str)
                 .map_err(|e| format!("Failed to deserialize JSON: {}", e))?;
 

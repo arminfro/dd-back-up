@@ -38,7 +38,7 @@ impl Device {
     ///
     /// # Returns
     ///
-    /// - `Ok(Some(Device))`: If a unique device is found matching the serial number and is not mounted.
+    /// - `Ok(Some(Device))`: If a unique device is found matching the serial number and if it isn't mounted.
     /// - `Ok(None)`: If no device is found matching the serial number or all matching devices are mounted.
     /// - `Err(String)`: If the serial number is not unique among the available devices.
     pub fn new(
@@ -120,6 +120,7 @@ impl Device {
     }
 
     /// Returns the total size of the block device, converted to bytes, or None if the size is unavailable.
+    /// This value is static in one run
     pub fn total_size(&self) -> Result<Option<u64>, String> {
         convert_to_byte_size(&self.blockdevice.size)
     }

@@ -143,7 +143,7 @@ impl Config {
     }
 
     /// Returns the path to the home directory where the configuration file is located.
-    /// Side effect: May create `~/.dd-back-up/` directory if it doesn't exist.
+    /// Side effect: May create `~/.config/dd-back-up/` directory if it doesn't exist.
     ///
     /// # Returns
     ///

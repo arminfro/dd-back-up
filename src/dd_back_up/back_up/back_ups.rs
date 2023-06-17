@@ -4,7 +4,7 @@ use crate::dd_back_up::config::{BackUpConfig, Config};
 use super::device::Device;
 use super::filesystem::Filesystem;
 use super::lsblk::Lsblk;
-use super::RunArgs;
+use super::BackUpArgs;
 
 #[derive(Debug)]
 pub struct BackUps<'a> {
@@ -13,7 +13,7 @@ pub struct BackUps<'a> {
     /// The list of backup devices.
     pub back_up_devices: Vec<Device>,
     /// The command line arguments for the backup operation.
-    pub back_up_args: &'a RunArgs,
+    pub back_up_args: &'a BackUpArgs,
 }
 
 impl<'a> BackUps<'a> {
@@ -35,7 +35,7 @@ impl<'a> BackUps<'a> {
     pub fn new(
         back_up_config: &BackUpConfig,
         lsblk: &Lsblk,
-        back_up_args: &'a RunArgs,
+        back_up_args: &'a BackUpArgs,
         config: &'a Config,
     ) -> Result<Option<BackUps<'a>>, String> {
         let dst_filesystem = Filesystem::new(
@@ -75,6 +75,7 @@ impl<'a> BackUps<'a> {
     }
 
     /// Executes the backup process.
+    /// Mount filesystems if needed, do backups pairs matching the conditions, unmount
     /// Returns `Ok(())` if the backup process is successful, otherwise returns an error message.
     pub fn run(mut self) -> Result<(), String> {
         if !self.dst_filesystem.is_mounted() {
@@ -82,22 +83,14 @@ impl<'a> BackUps<'a> {
         }
 
         for back_up_device in &self.back_up_devices {
-            if let Err(err) = self.do_backup(back_up_device) {
+            if let Err(err) =
+                BackUp::new(&self.dst_filesystem, &back_up_device, self.back_up_args).run()
+            {
                 eprintln!("Error performing backup: {}", err);
             }
         }
 
         self.dst_filesystem.unmount()?;
         Ok(())
-    }
-
-    /// Performs the backup for a specific device.
-    ///
-    /// # Arguments
-    ///
-    /// * `back_up_device` - The device to perform the backup for.
-    fn do_backup(&self, back_up_device: &Device) -> Result<(), String> {
-        let back_up = BackUp::new(&self.dst_filesystem, &back_up_device, self.back_up_args);
-        back_up.run()
     }
 }

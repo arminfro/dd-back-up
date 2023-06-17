@@ -12,7 +12,7 @@ use super::back_up::lsblk::Lsblk;
 use super::config::Config;
 
 #[derive(Args, Debug)]
-pub struct RunArgs {
+pub struct BackUpArgs {
     /// performs a dry run, no dd operation, just to see the output
     #[clap(short, long, default_value = "false")]
     dry: bool,
@@ -21,7 +21,7 @@ pub struct RunArgs {
     pub config_file_path: Option<String>,
 }
 
-pub fn run(back_up_args: &RunArgs, config: &Config) -> Result<(), String> {
+pub fn run(back_up_args: &BackUpArgs, config: &Config) -> Result<(), String> {
     let lsblk = Lsblk::new()?;
     // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 

@@ -33,16 +33,13 @@ pub fn command_output(
     {
         Ok(child) => {
             let output = child.wait_with_output().map_err(|e| e.to_string())?;
-            if output.status.success() {
-                Ok(output)
-            } else {
-                let error = format!(
+            match output.status.success() {
+                true => Ok(output),
+                false => Err(format!(
                     "Error running {}: {}",
                     &command_parts.join(" "),
                     String::from_utf8_lossy(&output.stderr).to_string()
-                );
-                eprintln!("{}", &error);
-                Err(error)
+                )),
             }
         }
         Err(err) => Err(err.to_string()),

@@ -150,7 +150,7 @@ impl Filesystem {
     /// Checks if the number of existing backups exceeds the specified number of copies.
     pub fn present_number_of_copies(
         &self,
-        stable_postfix_file_name: &str,
+        suffix_file_name_pattern: &str,
         back_up_dst_dir: &str,
     ) -> usize {
         let backup_files = match fs::read_dir(back_up_dst_dir) {
@@ -160,7 +160,7 @@ impl Filesystem {
                         e.file_name()
                             .to_str()
                             .map(|s| s.to_string())
-                            .filter(|s| s.contains(stable_postfix_file_name))
+                            .filter(|s| s.contains(suffix_file_name_pattern))
                     })
                 })
                 .collect::<Vec<String>>(),
@@ -173,29 +173,19 @@ impl Filesystem {
     /// Deletes the oldest backup file.
     pub fn delete_oldest_backup(
         &self,
-        stable_postfix_file_name: &str,
+        suffix_file_name_pattern: &str,
         back_up_dst_path: &str,
     ) -> Result<(), String> {
-        let backup_files = fs::read_dir(back_up_dst_path)
-            .map_err(|e| format!("Failed to read backup directory: {}", e))?
-            .filter_map(|entry| {
-                entry.ok().and_then(|e| {
-                    e.file_name()
-                        .to_str()
-                        .map(|s| s.to_string())
-                        .filter(|s| s.contains(stable_postfix_file_name))
-                })
-            })
-            .collect::<Vec<String>>();
-
-        if let Some(oldest_file) = backup_files.iter().min_by_key(|&file_name| {
+        let present_backup_files =
+            self.present_backup_files(suffix_file_name_pattern, back_up_dst_path)?;
+        if let Some(oldest_file) = present_backup_files.iter().min_by_key(|&file_name| {
             let file_path = Path::new(back_up_dst_path).join(file_name);
             if let Ok(metadata) = fs::metadata(&file_path) {
                 if let Ok(created) = metadata.created() {
                     return created;
                 }
             }
-            // fallback value to ensure consistent ordering in case of None
+            // fallback value to ensure consistent ordering
             std::time::UNIX_EPOCH
         }) {
             let file_path = format!("{}/{}", back_up_dst_path, oldest_file);
@@ -223,5 +213,24 @@ impl Filesystem {
             .clone()
             .map(|fsavail| convert_to_byte_size(&fsavail).unwrap_or(None))
             .unwrap_or(None))
+    }
+
+    fn present_backup_files(
+        &self,
+        suffix_file_name_pattern: &str,
+        back_up_dst_path: &str,
+    ) -> Result<Vec<String>, String> {
+        let present_backup_files = fs::read_dir(back_up_dst_path)
+            .map_err(|e| format!("Failed to read backup directory: {}", e))?
+            .filter_map(|entry| {
+                entry.ok().and_then(|e| {
+                    e.file_name()
+                        .to_str()
+                        .map(|s| s.to_string())
+                        .filter(|s| s.contains(suffix_file_name_pattern))
+                })
+            })
+            .collect::<Vec<String>>();
+        Ok(present_backup_files)
     }
 }

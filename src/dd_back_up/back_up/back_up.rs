@@ -4,7 +4,7 @@ use relative_path::RelativePath;
 
 use crate::dd_back_up::utils::current_date;
 
-use super::{command_output::command_output, device::Device, filesystem::Filesystem, RunArgs};
+use super::{command_output::command_output, device::Device, filesystem::Filesystem, BackUpArgs};
 
 pub struct BackUp<'a> {
     /// The destination filesystem for the backup.
@@ -12,7 +12,7 @@ pub struct BackUp<'a> {
     /// The backup device.
     pub back_up_device: &'a Device,
     /// The command line arguments for the backup operation.
-    pub back_up_args: &'a RunArgs,
+    pub back_up_args: &'a BackUpArgs,
 }
 
 impl<'a> BackUp<'a> {
@@ -25,7 +25,7 @@ impl<'a> BackUp<'a> {
     pub fn new(
         dst_filesystem: &'a Filesystem,
         back_up_device: &'a Device,
-        back_up_args: &'a RunArgs,
+        back_up_args: &'a BackUpArgs,
     ) -> BackUp<'a> {
         BackUp {
             dst_filesystem,
@@ -43,7 +43,7 @@ impl<'a> BackUp<'a> {
     pub fn run(&self) -> Result<(), String> {
         self.validate_state()?;
 
-        let input_file_arg = format!("if={}", self.input_file_path());
+        let input_file_arg = format!("if={}", self.back_up_device.device_path.clone());
         let output_file_arg = format!("of={}", self.back_up_file_path());
         let command_parts = vec!["dd", &input_file_arg, &output_file_arg, "status=progress"];
         let description = format!("run dd command: {:?}", &command_parts.join(" "));
@@ -104,11 +104,7 @@ impl<'a> BackUp<'a> {
         .map(|_| ())
     }
 
-    /// Returns the input file path for the backup.
-    fn input_file_path(&self) -> String {
-        self.back_up_device.device_path.clone()
-    }
-
+    /// Returns the output dir path for the backup.
     fn back_up_dir_path(&self) -> String {
         let relative_path =
             RelativePath::new(&self.dst_filesystem.blockdevice.mountpoint.clone().unwrap())
@@ -133,7 +129,7 @@ impl<'a> BackUp<'a> {
             "{}_{}_{}",
             current_date(),
             self.back_up_device.name,
-            self.stable_postfix_file_name().replace(" ", "-")
+            self.suffix_file_name_pattern().replace(" ", "-")
         )
     }
 
@@ -146,7 +142,7 @@ impl<'a> BackUp<'a> {
     /// # Returns
     ///
     /// The stable postfix file name as a string.
-    fn stable_postfix_file_name(&self) -> String {
+    fn suffix_file_name_pattern(&self) -> String {
         format!(
             "{}.img",
             vec![
@@ -165,7 +161,7 @@ impl<'a> BackUp<'a> {
     fn needs_deletion(&self) -> bool {
         let present_number_of_copies = self
             .dst_filesystem
-            .present_number_of_copies(&self.stable_postfix_file_name(), &self.back_up_dir_path());
+            .present_number_of_copies(&self.suffix_file_name_pattern(), &self.back_up_dir_path());
         present_number_of_copies >= self.back_up_device.copies as usize
     }
 
@@ -178,20 +174,20 @@ impl<'a> BackUp<'a> {
     /// If all checks pass, `Ok(())` is returned indicating that the state is valid and the backup
     /// process can proceed.
     fn validate_state(&self) -> Result<(), String> {
-        self.check_if_target_file_is_present()?;
+        self.target_file_is_present()?;
         let needed_deletion = self.delete_oldest_backup_if_needed()?;
         if !needed_deletion {
-            self.check_if_target_filesystem_has_enough_space()?;
+            self.target_filesystem_has_enough_space()?;
         }
         Ok(())
     }
 
-    /// Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
+    /// Side-Effect: Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
     fn delete_oldest_backup_if_needed(&self) -> Result<bool, String> {
         let needs_deletion = self.needs_deletion();
         if needs_deletion && !self.back_up_args.dry {
             self.dst_filesystem
-                .delete_oldest_backup(&self.stable_postfix_file_name(), &self.back_up_dir_path())?;
+                .delete_oldest_backup(&self.suffix_file_name_pattern(), &self.back_up_dir_path())?;
         }
         Ok(needs_deletion)
     }
@@ -201,7 +197,7 @@ impl<'a> BackUp<'a> {
     /// If there is sufficient space, `Ok(())` is returned, indicating that the backup can proceed.
     /// If there is not enough space, an error is returned with a descriptive message.
     /// If either available_space or needed_space is None then proceed with an Ok as well.
-    fn check_if_target_filesystem_has_enough_space(&self) -> Result<(), String> {
+    fn target_filesystem_has_enough_space(&self) -> Result<(), String> {
         let available_space = self.dst_filesystem.available_space()?;
         let needed_space = self.back_up_device.total_size()?;
 
@@ -231,7 +227,7 @@ impl<'a> BackUp<'a> {
     ///
     /// - `Ok(())`: If the backup file does not exist and can proceed.
     /// - `Err(String)`: If the backup file is already present.
-    fn check_if_target_file_is_present(&self) -> Result<(), String> {
+    fn target_file_is_present(&self) -> Result<(), String> {
         let file_path = self.back_up_file_path();
         let path = Path::new(&file_path);
 

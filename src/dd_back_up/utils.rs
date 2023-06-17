@@ -1,5 +1,6 @@
 use chrono::Local;
 
+/// Returns the current date in the the form YYYY-MM-DD as a String
 pub fn current_date() -> String {
     let current_date = Local::now();
     current_date.format("%Y-%m-%d").to_string()
