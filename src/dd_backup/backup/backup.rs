@@ -2,35 +2,35 @@ use std::path::Path;
 
 use relative_path::RelativePath;
 
-use crate::dd_back_up::utils::current_date;
+use crate::dd_backup::utils::current_date;
 
-use super::{command_output::command_output, device::Device, filesystem::Filesystem, BackUpArgs};
+use super::{command_output::command_output, device::Device, filesystem::Filesystem, BackupArgs};
 
-pub struct BackUp<'a> {
+pub struct Backup<'a> {
     /// The destination filesystem for the backup.
     pub dst_filesystem: &'a Filesystem,
     /// The backup device.
-    pub back_up_device: &'a Device,
+    pub backup_device: &'a Device,
     /// The command line arguments for the backup operation.
-    pub back_up_args: &'a BackUpArgs,
+    pub backup_args: &'a BackupArgs,
 }
 
-impl<'a> BackUp<'a> {
+impl<'a> Backup<'a> {
     /// Creates a new `BackUp` instance.
     ///
     /// # Arguments
     ///
     /// * `dst_filesystem` - The destination filesystem for the backup.
-    /// * `back_up_device` - The device to be backed up.
+    /// * `backup_device` - The device to be backed up.
     pub fn new(
         dst_filesystem: &'a Filesystem,
-        back_up_device: &'a Device,
-        back_up_args: &'a BackUpArgs,
-    ) -> BackUp<'a> {
-        BackUp {
+        backup_device: &'a Device,
+        backup_args: &'a BackupArgs,
+    ) -> Backup<'a> {
+        Backup {
             dst_filesystem,
-            back_up_device,
-            back_up_args,
+            backup_device,
+            backup_args,
         }
     }
 
@@ -43,11 +43,11 @@ impl<'a> BackUp<'a> {
     pub fn run(&self) -> Result<(), String> {
         self.validate_state()?;
 
-        let input_file_arg = format!("if={}", self.back_up_device.device_path.clone());
-        let output_file_arg = format!("of={}", self.back_up_file_path());
+        let input_file_arg = format!("if={}", self.backup_device.device_path.clone());
+        let output_file_arg = format!("of={}", self.backup_file_path());
         let command_parts = vec!["dd", &input_file_arg, &output_file_arg, "status=progress"];
         let description = format!("run dd command: {:?}", &command_parts.join(" "));
-        match self.back_up_args.dry {
+        match self.backup_args.dry {
             true => {
                 println!(
                     "[Dry-Run] backup would run with command: {}",
@@ -88,7 +88,7 @@ impl<'a> BackUp<'a> {
     /// - `Ok(())`: If the operation is successful.
     /// - `Err(String)`: If an error occurs during the operation.
     fn chown(&self) -> Result<(), String> {
-        let output_file_path = self.back_up_file_path();
+        let output_file_path = self.backup_file_path();
 
         // Retrieve the current user and group IDs
         let user_id = unsafe { libc::getuid() };
@@ -105,18 +105,18 @@ impl<'a> BackUp<'a> {
     }
 
     /// Returns the output dir path for the backup.
-    fn back_up_dir_path(&self) -> String {
+    fn backup_dir_path(&self) -> String {
         let relative_path =
             RelativePath::new(&self.dst_filesystem.blockdevice.mountpoint.clone().unwrap())
-                .join_normalized(self.back_up_device.destination_path.clone())
+                .join_normalized(self.backup_device.destination_path.clone())
                 .to_string();
 
         format!("/{}", relative_path)
     }
 
     /// Returns the output file path for the backup.
-    fn back_up_file_path(&self) -> String {
-        let relative_path = RelativePath::new(&self.back_up_dir_path())
+    fn backup_file_path(&self) -> String {
+        let relative_path = RelativePath::new(&self.backup_dir_path())
             .join_normalized(self.file_name())
             .to_string();
 
@@ -128,7 +128,7 @@ impl<'a> BackUp<'a> {
         format!(
             "{}_{}_{}",
             current_date(),
-            self.back_up_device.name,
+            self.backup_device.name,
             self.suffix_file_name_pattern().replace(" ", "-")
         )
     }
@@ -146,8 +146,8 @@ impl<'a> BackUp<'a> {
         format!(
             "{}.img",
             vec![
-                self.back_up_device.blockdevice.model.clone(),
-                self.back_up_device.blockdevice.serial.clone(),
+                self.backup_device.blockdevice.model.clone(),
+                self.backup_device.blockdevice.serial.clone(),
             ]
             .into_iter()
             .filter_map(|x| x)
@@ -161,8 +161,8 @@ impl<'a> BackUp<'a> {
     fn needs_deletion(&self) -> bool {
         let present_number_of_copies = self
             .dst_filesystem
-            .present_number_of_copies(&self.suffix_file_name_pattern(), &self.back_up_dir_path());
-        present_number_of_copies >= self.back_up_device.copies as usize
+            .present_number_of_copies(&self.suffix_file_name_pattern(), &self.backup_dir_path());
+        present_number_of_copies >= self.backup_device.copies as usize
     }
 
     /// Validates the state of the backup process by performing the following checks:
@@ -185,9 +185,9 @@ impl<'a> BackUp<'a> {
     /// Side-Effect: Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
     fn delete_oldest_backup_if_needed(&self) -> Result<bool, String> {
         let needs_deletion = self.needs_deletion();
-        if needs_deletion && !self.back_up_args.dry {
+        if needs_deletion && !self.backup_args.dry {
             self.dst_filesystem
-                .delete_oldest_backup(&self.suffix_file_name_pattern(), &self.back_up_dir_path())?;
+                .delete_oldest_backup(&self.suffix_file_name_pattern(), &self.backup_dir_path())?;
         }
         Ok(needs_deletion)
     }
@@ -199,7 +199,7 @@ impl<'a> BackUp<'a> {
     /// If either available_space or needed_space is None then proceed with an Ok as well.
     fn target_filesystem_has_enough_space(&self) -> Result<(), String> {
         let available_space = self.dst_filesystem.available_space()?;
-        let needed_space = self.back_up_device.total_size()?;
+        let needed_space = self.backup_device.total_size()?;
 
         if let Some(available_space) = available_space {
             if let Some(needed_space) = needed_space {
@@ -209,7 +209,7 @@ impl<'a> BackUp<'a> {
                 } else {
                     return Err(format!(
                         "Not enough space on destination filesystem {}, to backup device {}",
-                        self.dst_filesystem.device_path, self.back_up_device.device_path
+                        self.dst_filesystem.device_path, self.backup_device.device_path
                     ));
                 }
             }
@@ -228,7 +228,7 @@ impl<'a> BackUp<'a> {
     /// - `Ok(())`: If the backup file does not exist and can proceed.
     /// - `Err(String)`: If the backup file is already present.
     fn target_file_is_present(&self) -> Result<(), String> {
-        let file_path = self.back_up_file_path();
+        let file_path = self.backup_file_path();
         let path = Path::new(&file_path);
 
         if path.exists() && path.is_file() {

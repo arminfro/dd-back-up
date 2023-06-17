@@ -1,5 +1,5 @@
 [package]
-name = "dd-back-up"
+name = "dd_backup"
 version = "0.1.0"
 edition = "2021"
 

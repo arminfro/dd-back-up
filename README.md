@@ -1,20 +1,20 @@
-`dd-back-up` is a command-line tool written in Rust that performs block device backups using the `dd` command.
+`dd_backup` is a command-line tool written in Rust that performs block device backups using the `dd` command.
 It allows you to back up specific devices to a designated filesystem or partition on a Linux system.
 Supports configuring the number of copies to be kept for each device.
 
 ## Installation
 
 ```shell
-git clone https://github.com/arminfro/dd-back-up.git && cd dd-back-up && cargo install --path .
+git clone https://github.com/arminfro/dd_backup.git && cd dd_backup && cargo install --path .
 ```
 
 ## Usage:
 
-To use dd-back-up, you need to configure the backup settings in a JSON configuration file.
+To use dd_backup, you need to configure the backup settings in a JSON configuration file.
 
 ### Configuration
 
-The configuration file (`~/.config/dd-back-up/config.json`) is used to specify the backup configurations. It has the following structure:
+The configuration file (`~/.config/dd_backup/config.json`) is used to specify the backup configurations. It has the following structure:
 
 ```json
 {
@@ -23,7 +23,7 @@ The configuration file (`~/.config/dd-back-up/config.json`) is used to specify t
     {
       "uuid": "dst-back-up-fs-uuid-1",
       "destination_path": "./",
-      "back_up_devices": [
+      "backup_devices": [
         {
           "serial": "device-serial-1",
           "name": "desktop"
@@ -58,7 +58,7 @@ The configuration file (`~/.config/dd-back-up/config.json`) is used to specify t
 
     - Note: If you want to use subdirs, create them manually
 
-  - `back_up_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
+  - `backup_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
 
     - obtain the serial with tools like `lsblk -n -o NAME,SERIAL`
 
@@ -76,10 +76,10 @@ If either of them is not found, the corresponding pair will be skipped during th
 
 ### Running the Backup:
 
-Once you have configured the backup settings, you can run the backup process by executing `dd-back-up run`.
+Once you have configured the backup settings, you can run the backup process by executing `dd_backup run`.
 
 ```shell
-Usage: dd-back-up run [OPTIONS]
+Usage: dd_backup run [OPTIONS]
 
 Options:
   -d, --dry

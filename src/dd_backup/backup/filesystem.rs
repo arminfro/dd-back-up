@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::dd_back_up::utils::convert_to_byte_size;
+use crate::dd_backup::utils::convert_to_byte_size;
 
 use super::{
     command_output::command_output,
@@ -151,9 +151,9 @@ impl Filesystem {
     pub fn present_number_of_copies(
         &self,
         suffix_file_name_pattern: &str,
-        back_up_dst_dir: &str,
+        backup_dst_dir: &str,
     ) -> usize {
-        let backup_files = match fs::read_dir(back_up_dst_dir) {
+        let backup_files = match fs::read_dir(backup_dst_dir) {
             Ok(files) => files
                 .filter_map(|entry| {
                     entry.ok().and_then(|e| {
@@ -167,19 +167,19 @@ impl Filesystem {
             Err(_) => Vec::new(),
         };
 
-        backup_files.len() // >= self.back_up_device.copies as usize
+        backup_files.len() // >= self.backup_device.copies as usize
     }
 
     /// Deletes the oldest backup file.
     pub fn delete_oldest_backup(
         &self,
         suffix_file_name_pattern: &str,
-        back_up_dst_path: &str,
+        backup_dst_path: &str,
     ) -> Result<(), String> {
         let present_backup_files =
-            self.present_backup_files(suffix_file_name_pattern, back_up_dst_path)?;
+            self.present_backup_files(suffix_file_name_pattern, backup_dst_path)?;
         if let Some(oldest_file) = present_backup_files.iter().min_by_key(|&file_name| {
-            let file_path = Path::new(back_up_dst_path).join(file_name);
+            let file_path = Path::new(backup_dst_path).join(file_name);
             if let Ok(metadata) = fs::metadata(&file_path) {
                 if let Ok(created) = metadata.created() {
                     return created;
@@ -188,7 +188,7 @@ impl Filesystem {
             // fallback value to ensure consistent ordering
             std::time::UNIX_EPOCH
         }) {
-            let file_path = format!("{}/{}", back_up_dst_path, oldest_file);
+            let file_path = format!("{}/{}", backup_dst_path, oldest_file);
             println!("Removing old back up file: {}", file_path);
             fs::remove_file(&file_path)
                 .map_err(|e| format!("Failed to delete oldest backup file '{}': {}", file_path, e))
@@ -218,9 +218,9 @@ impl Filesystem {
     fn present_backup_files(
         &self,
         suffix_file_name_pattern: &str,
-        back_up_dst_path: &str,
+        backup_dst_path: &str,
     ) -> Result<Vec<String>, String> {
-        let present_backup_files = fs::read_dir(back_up_dst_path)
+        let present_backup_files = fs::read_dir(backup_dst_path)
             .map_err(|e| format!("Failed to read backup directory: {}", e))?
             .filter_map(|entry| {
                 entry.ok().and_then(|e| {

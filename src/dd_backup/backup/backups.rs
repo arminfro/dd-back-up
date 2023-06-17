@@ -1,30 +1,30 @@
-use crate::dd_back_up::back_up::back_up::BackUp;
-use crate::dd_back_up::config::{BackUpConfig, Config};
+use crate::dd_backup::backup::backup::Backup;
+use crate::dd_backup::config::{BackupConfig, Config};
 
 use super::device::Device;
 use super::filesystem::Filesystem;
 use super::lsblk::Lsblk;
-use super::BackUpArgs;
+use super::BackupArgs;
 
 #[derive(Debug)]
-pub struct BackUps<'a> {
+pub struct Backups<'a> {
     /// The destination filesystem for the backup.
     pub dst_filesystem: Filesystem,
     /// The list of backup devices.
-    pub back_up_devices: Vec<Device>,
+    pub backup_devices: Vec<Device>,
     /// The command line arguments for the backup operation.
-    pub back_up_args: &'a BackUpArgs,
+    pub backup_args: &'a BackupArgs,
 }
 
-impl<'a> BackUps<'a> {
+impl<'a> Backups<'a> {
     /// Creates a new `BackUp` instance based on the provided parameters.
     /// It returns `Some(BackUp)` if the destination filesystem is found, otherwise `None` is returned.
     ///
     /// # Arguments
     ///
-    /// * `back_up_config` - The backup configuration.
+    /// * `backup_config` - The backup configuration.
     /// * `lsblk` - The `Lsblk` instance containing available filesystems and devices.
-    /// * `back_up_args` - The command-line arguments for the backup operation.
+    /// * `backup_args` - The command-line arguments for the backup operation.
     /// * `config` - The global configuration.
     ///
     /// # Returns
@@ -33,41 +33,41 @@ impl<'a> BackUps<'a> {
     /// - `Ok(None)`: If the destination filesystem is not found or not configured for backup.
     /// - `Err(String)`: If there is an error during the process.
     pub fn new(
-        back_up_config: &BackUpConfig,
+        backup_config: &BackupConfig,
         lsblk: &Lsblk,
-        back_up_args: &'a BackUpArgs,
+        backup_args: &'a BackupArgs,
         config: &'a Config,
-    ) -> Result<Option<BackUps<'a>>, String> {
+    ) -> Result<Option<Backups<'a>>, String> {
         let dst_filesystem = Filesystem::new(
-            &back_up_config.uuid,
+            &backup_config.uuid,
             &lsblk.available_filesystems,
             config.mountpath.clone(),
         )?;
 
         if let Some(dst_filesystem) = dst_filesystem {
-            let back_up_devices_result: Result<Vec<_>, _> = back_up_config
-                .back_up_devices
+            let backup_devices_result: Result<Vec<_>, _> = backup_config
+                .backup_devices
                 .iter()
-                .map(|back_up_device| {
+                .map(|backup_device| {
                     Device::new(
-                        &back_up_device,
+                        &backup_device,
                         &lsblk.available_devices,
-                        back_up_config.destination_path.clone(),
+                        backup_config.destination_path.clone(),
                     )
                 })
                 .collect();
 
             // Unwrap the `Result<Vec<Device>, String>` and filter out any `None` values using `filter_map`
-            let back_up_devices: Vec<Device> = back_up_devices_result
+            let backup_devices: Vec<Device> = backup_devices_result
                 .map_err(|e| format!("Failed to create Device object: {}", e))?
                 .into_iter()
                 .filter_map(|x| x)
                 .collect();
 
-            Ok(Some(BackUps {
+            Ok(Some(Backups {
                 dst_filesystem,
-                back_up_devices,
-                back_up_args,
+                backup_devices,
+                backup_args,
             }))
         } else {
             Ok(None)
@@ -82,9 +82,9 @@ impl<'a> BackUps<'a> {
             self.dst_filesystem.mount()?;
         }
 
-        for back_up_device in &self.back_up_devices {
+        for backup_device in &self.backup_devices {
             if let Err(err) =
-                BackUp::new(&self.dst_filesystem, &back_up_device, self.back_up_args).run()
+                Backup::new(&self.dst_filesystem, &backup_device, self.backup_args).run()
             {
                 eprintln!("Error performing backup: {}", err);
             }

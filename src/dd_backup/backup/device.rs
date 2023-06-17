@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::dd_back_up::{config::BackUpDevice, utils::convert_to_byte_size};
+use crate::dd_backup::{config::BackupDevice, utils::convert_to_byte_size};
 
 use super::lsblk::BlockDevice;
 
@@ -42,12 +42,12 @@ impl Device {
     /// - `Ok(None)`: If no device is found matching the serial number or all matching devices are mounted.
     /// - `Err(String)`: If the serial number is not unique among the available devices.
     pub fn new(
-        back_up_device: &BackUpDevice,
+        backup_device: &BackupDevice,
         available_devices: &[BlockDevice],
         destination_path: Option<String>,
     ) -> Result<Option<Device>, String> {
         let serial_filtered_lsblk =
-            Self::validate_serial_uniq(&back_up_device.serial, available_devices)?;
+            Self::validate_serial_uniq(&backup_device.serial, available_devices)?;
 
         let device = Self::validate_present_serial(serial_filtered_lsblk)
             .filter(|blockdevice| {
@@ -58,13 +58,13 @@ impl Device {
             .map(|blockdevice| Device {
                 blockdevice: blockdevice.clone(),
                 device_path: format!("/dev/{}", &blockdevice.name),
-                name: back_up_device
+                name: backup_device
                     .name
                     .clone()
                     .unwrap_or("".to_string())
                     .replace(" ", "-"),
                 destination_path: destination_path.unwrap_or("./".to_string()),
-                copies: back_up_device.copies.unwrap_or(1),
+                copies: backup_device.copies.unwrap_or(1),
             });
 
         Ok(device)

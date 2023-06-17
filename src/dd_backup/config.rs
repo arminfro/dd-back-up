@@ -6,7 +6,7 @@ use std::{
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct BackUpDevice {
+pub struct BackupDevice {
     /// The serial number of the device.
     pub serial: String,
     /// An optional name for the device.
@@ -21,14 +21,14 @@ pub struct BackUpDevice {
 
 /// Represents the configuration for a single backup.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct BackUpConfig {
+pub struct BackupConfig {
     /// The list of devices to be backed up.
     ///
     /// Strings are identifiers of whole devices.
     /// The identifier can be the serial number or the wwn (world wide name).
     /// Since some devices may not have a serial number or even have duplicated serial numbers,
     /// the identifier serves as a unique identifier for the device.
-    pub back_up_devices: Vec<BackUpDevice>,
+    pub backup_devices: Vec<BackupDevice>,
     /// The UUID of the destination backup filesystem or partition.
     pub uuid: String,
     /// The destination path where the backup will be stored.
@@ -42,7 +42,7 @@ pub struct Config {
     /// The list of backup configurations.
     /// Each configuration specifies the destination backup filesystem or partition
     /// and the devices to be backed up on that filesystem.
-    pub backups: Vec<BackUpConfig>,
+    pub backups: Vec<BackupConfig>,
     /// The path on which the destination filesystem will be mounted.
     /// If not provided, the default mount path will be used.
     pub mountpath: Option<String>,
@@ -69,15 +69,19 @@ impl Config {
         let config_file_path = match config_file_path {
             Some(path_string) => Ok(PathBuf::from(path_string)),
             None => Self::default_config_file_path(),
-        };
+        }?;
 
-        match File::open(config_file_path?) {
+        match File::open(&config_file_path) {
             Ok(config_file) => {
                 let parsed_config: Result<Config, _> = serde_json::from_reader(config_file);
 
                 parsed_config.map_err(|e| format!("Cannot parse config file -> {}", e.to_string()))
             }
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(format!(
+                "{}: {}",
+                e.to_string(),
+                config_file_path.as_path().to_str().unwrap(),
+            )),
         }
     }
 
@@ -103,11 +107,11 @@ impl Config {
         for backup in &config.backups {
             // Check for unique serial numbers within each backup
             let serials: HashSet<&String> = backup
-                .back_up_devices
+                .backup_devices
                 .iter()
                 .map(|device| &device.serial)
                 .collect();
-            if serials.len() != backup.back_up_devices.len() {
+            if serials.len() != backup.backup_devices.len() {
                 return Err(format!(
                     "Duplicate serial number found in backup with UUID '{}'",
                     backup.uuid
@@ -115,7 +119,7 @@ impl Config {
             }
 
             // Check if the number of copies is specified and greater than 0
-            for device in &backup.back_up_devices {
+            for device in &backup.backup_devices {
                 if let Some(copies) = device.copies {
                     if copies <= 0 {
                         return Err(format!(
@@ -143,7 +147,7 @@ impl Config {
     }
 
     /// Returns the path to the home directory where the configuration file is located.
-    /// Side effect: May create `~/.config/dd-back-up/` directory if it doesn't exist.
+    /// Side effect: May create `~/.config/dd_backup/` directory if it doesn't exist.
     ///
     /// # Returns
     ///
@@ -153,7 +157,7 @@ impl Config {
         let data_dir = dirs::home_dir()
             .ok_or("Failed to find Home dir")?
             .join(".config")
-            .join("dd-back-up");
+            .join("dd_backup");
 
         if !data_dir.exists() {
             Self::create_data_directory(&data_dir)?;

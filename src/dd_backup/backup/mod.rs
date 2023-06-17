@@ -1,5 +1,5 @@
-mod back_up;
-mod back_ups;
+mod backup;
+mod backups;
 mod command_output;
 mod device;
 mod filesystem;
@@ -7,12 +7,12 @@ mod lsblk;
 
 use clap::Args;
 
-use super::back_up::back_ups::BackUps;
-use super::back_up::lsblk::Lsblk;
+use super::backup::backups::Backups;
+use super::backup::lsblk::Lsblk;
 use super::config::Config;
 
 #[derive(Args, Debug)]
-pub struct BackUpArgs {
+pub struct BackupArgs {
     /// performs a dry run, no dd operation, just to see the output
     #[clap(short, long, default_value = "false")]
     dry: bool,
@@ -21,13 +21,13 @@ pub struct BackUpArgs {
     pub config_file_path: Option<String>,
 }
 
-pub fn run(back_up_args: &BackUpArgs, config: &Config) -> Result<(), String> {
+pub fn run(backup_args: &BackupArgs, config: &Config) -> Result<(), String> {
     let lsblk = Lsblk::new()?;
     // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
-    for back_up_config in &config.backups {
-        if let Some(back_ups) = BackUps::new(back_up_config, &lsblk, back_up_args, config)? {
-            back_ups.run()?;
+    for backup_config in &config.backups {
+        if let Some(backups) = Backups::new(backup_config, &lsblk, backup_args, config)? {
+            backups.run()?;
         }
     }
 
