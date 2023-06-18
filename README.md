@@ -79,7 +79,7 @@ If either of them is not found, the corresponding pair will be skipped during th
 Once you have configured the backup settings, you can run the backup process by executing `dd_backup run`.
 
 ```shell
-Usage: dd_backup run [OPTIONS] >> backup.log 2>&1
+Usage: dd_backup run [OPTIONS]
 
 Options:
   -d, --dry
