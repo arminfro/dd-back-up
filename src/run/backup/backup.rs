@@ -135,9 +135,8 @@ impl<'a> Backup<'a> {
     /// Generates the file name for the backup image.
     fn file_name(&self) -> String {
         format!(
-            "{}_{}_{}",
+            "{}_{}",
             current_date(),
-            self.backup_device.name,
             self.suffix_file_name_pattern().replace(" ", "-")
         )
     }
@@ -155,6 +154,7 @@ impl<'a> Backup<'a> {
         format!(
             "{}.img",
             vec![
+                self.backup_device.name.clone(),
                 self.backup_device.blockdevice.model.clone(),
                 self.backup_device.blockdevice.serial.clone(),
             ]

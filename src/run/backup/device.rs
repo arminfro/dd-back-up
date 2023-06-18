@@ -15,7 +15,7 @@ pub struct Device {
     /// The path to the device.
     pub device_path: String,
     /// The name of the device.
-    pub name: String,
+    pub name: Option<String>,
     /// The destination path for the device.
     pub destination_path: String,
     /// The number of copies to be kept for this device.
@@ -58,11 +58,7 @@ impl Device {
             .map(|blockdevice| Device {
                 blockdevice: blockdevice.clone(),
                 device_path: format!("/dev/{}", &blockdevice.name),
-                name: backup_device
-                    .name
-                    .clone()
-                    .unwrap_or("".to_string())
-                    .replace(" ", "-"),
+                name: backup_device.name.clone(),
                 destination_path: destination_path.unwrap_or("./".to_string()),
                 copies: backup_device.copies.unwrap_or(1),
             });

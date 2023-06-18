@@ -68,7 +68,7 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
 
       - Note: If you decrease the value of copies after a while, you may need to manually delete backup files until you have the desired number of copies. Otherwise, the program will continue to delete only one backup per run, which may result in the same count as before decreasing.
 
-      - Note: To obtain the number of present copies the program will use the last two values of the image name (model and serial). If you want to keep a copy which will not be managed by the application append some value to the filename.
+      - Note: To obtain the number of present copies the program will consider the values name, model and serial as common suffix for counting. If you want to keep a copy which will not be managed by the application append some value to the filename.
 
 The program allows you to configure backups for all your backup devices, whether they are currently connected or not.
 It checks for the presence of the filesystem and the device.
