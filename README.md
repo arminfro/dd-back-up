@@ -79,7 +79,7 @@ If either of them is not found, the corresponding pair will be skipped during th
 Once you have configured the backup settings, you can run the backup process by executing `dd_backup run`.
 
 ```shell
-Usage: dd_backup run [OPTIONS]
+Usage: dd_backup run [OPTIONS] >> backup.log 2>&1
 
 Options:
   -d, --dry
@@ -93,6 +93,16 @@ The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.i
 
 Make sure to exercise caution when specifying the backup devices and the target filesystem/partition.
 Use the `--dry` flag to see what devices would be backed up before running it.
+
+#### Logging
+
+To adjust the amount of log output, you can set the `RUST_LOG` environment variable to different levels such as `trace` or `debug` for more detailed output, or `warn` or `error` for less verbose output.
+
+Here's an example command that runs the application with increased log output, saves the logs to a file, and also displays them on the command line:
+
+```shell
+RUST_LOG=debug dd_backup run 2>&1 | tee -a backup.log
+```
 
 License:
 This project is licensed under the MIT license.

@@ -66,7 +66,13 @@ impl Device {
                 destination_path: destination_path.unwrap_or("./".to_string()),
                 copies: backup_device.copies.unwrap_or(1),
             });
-
+        match &device {
+            Some(device) => debug!("{:?}", device),
+            None => info!(
+                "Device with serial {}, not found, skipping it",
+                backup_device.serial
+            ),
+        }
         Ok(device)
     }
 
@@ -110,8 +116,7 @@ impl Device {
             if let Ok(entry) = line {
                 let fields: Vec<&str> = entry.split(' ').collect();
                 if fields.len() >= 2 && fields[0].contains(device_path) {
-                    eprintln!("Device {} is mounted, skipping.", device_path);
-
+                    warn!("Device {} is mounted, skipping it", device_path);
                     return Ok(true);
                 }
             }

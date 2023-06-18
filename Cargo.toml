@@ -9,7 +9,9 @@ edition = "2021"
 chrono = "0.4.26"
 clap = { version = "4.3.3", features = ["derive"] }
 dirs = "5.0.1"
+env_logger = "0.10.0"
 libc = "0.2.146"
+log = "0.4"
 nix = "0.26.2"
 relative-path = "1.8.0"
 serde  = {version="1.0.164", features = ["derive"] }

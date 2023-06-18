@@ -17,7 +17,7 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     /// Perform the backups
     Run(BackupArgs),
@@ -26,6 +26,7 @@ enum Commands {
 pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
 
+    trace!("CLI command matching {:?}", &cli.command);
     match &cli.command {
         Commands::Run(backup_args) => {
             let config = Config::new(&backup_args.config_file_path)

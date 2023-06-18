@@ -64,11 +64,13 @@ impl<'a> Backups<'a> {
                 .filter_map(|x| x)
                 .collect();
 
-            Ok(Some(Backups {
+            let backups = Backups {
                 dst_filesystem,
                 backup_devices,
                 backup_args,
-            }))
+            };
+            debug!("{:?}", backups);
+            Ok(Some(backups))
         } else {
             Ok(None)
         }
@@ -86,7 +88,7 @@ impl<'a> Backups<'a> {
             if let Err(err) =
                 Backup::new(&self.dst_filesystem, &backup_device, self.backup_args).run()
             {
-                eprintln!("Error performing backup: {}", err);
+                error!("Error performing backup: {}", err);
             }
         }
 

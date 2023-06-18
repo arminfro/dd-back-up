@@ -1,10 +1,20 @@
 use std::process;
-mod dd_backup;
+
+use crate::logger::configure_logger;
+mod logger;
+mod run;
+
+#[macro_use]
+extern crate log;
 
 fn main() {
-    if let Err(e) = dd_backup::run() {
-        eprintln!("Application error: {}", e);
+    configure_logger();
+    debug!("Application is starting");
+
+    if let Err(e) = run::run() {
+        error!("Application error: {}", e);
 
         process::exit(1);
     }
+    debug!("Application ran successfully");
 }

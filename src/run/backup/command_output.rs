@@ -26,6 +26,7 @@ pub fn command_output(
         }
     };
 
+    trace!("Command: {}", command_parts.join(" "));
     match Command::new(&command_parts[0])
         .args(&command_parts[1..])
         .stdout(Stdio::piped())
@@ -42,7 +43,7 @@ pub fn command_output(
                 )),
             }
         }
-        Err(err) => Err(err.to_string()),
+        Err(err) => Err(format!("{}: {}", err, command_parts.join(" "))),
     }
 }
 
@@ -56,8 +57,8 @@ fn append_sudo_if_available<'a>(
         updated_command_parts.push("sudo");
         let sudo_message = "Sudo is needed";
         match description {
-            Some(description) => println!("{} to {}", sudo_message, description),
-            None => println!("{}", sudo_message),
+            Some(description) => info!("{} to {}", sudo_message, description),
+            None => info!("{}", sudo_message),
         };
     }
 

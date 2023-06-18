@@ -46,17 +46,24 @@ impl Filesystem {
         let uuid_filtered_lsblk = Self::validate_uuid_uniq(uuid, available_filesystems)?;
 
         match Self::validate_present_uuid(uuid_filtered_lsblk) {
-            Some(blockdevice) => Ok(Some(Filesystem {
-                blockdevice: blockdevice.clone(),
-                device_path: format!("/dev/{}", &blockdevice.name),
-                mountpath: mountpath.unwrap_or("/mnt".to_string()),
-                fsavail: blockdevice
-                    .fsavail
-                    .clone()
-                    .map(|fsavail| convert_to_byte_size(&fsavail).unwrap_or(None))
-                    .unwrap_or(None),
-            })),
-            None => Ok(None),
+            Some(blockdevice) => {
+                let filesystem = Filesystem {
+                    blockdevice: blockdevice.clone(),
+                    device_path: format!("/dev/{}", &blockdevice.name),
+                    mountpath: mountpath.unwrap_or("/mnt".to_string()),
+                    fsavail: blockdevice
+                        .fsavail
+                        .clone()
+                        .map(|fsavail| convert_to_byte_size(&fsavail).unwrap_or(None))
+                        .unwrap_or(None),
+                };
+                debug!("{:?}", filesystem);
+                Ok(Some(filesystem))
+            }
+            None => {
+                info!("Filesystem with uuid {}, not found, skipping it", uuid);
+                Ok(None)
+            }
         }
     }
 
@@ -109,10 +116,16 @@ impl Filesystem {
 
         if output.status.success() {
             self.blockdevice.mountpoint = Some(self.mountpath.clone());
-            println!("Filesystem mounted successfully");
+            info!(
+                "Filesystem {} mounted successfully on {}",
+                self.device_path, self.mountpath
+            );
             Ok(())
         } else {
-            Err(format!("Error mounting filesystem {}", self.device_path))
+            Err(format!(
+                "Error mounting filesystem {} on {}",
+                self.device_path, self.mountpath
+            ))
         }
     }
 
@@ -135,7 +148,7 @@ impl Filesystem {
 
         if output.status.success() {
             self.blockdevice.mountpoint = None;
-            println!("Filesystem unmounted successfully");
+            info!("Filesystem {} unmounted successfully", self.device_path);
             Ok(())
         } else {
             Err(format!(
@@ -189,7 +202,7 @@ impl Filesystem {
             std::time::UNIX_EPOCH
         }) {
             let file_path = format!("{}/{}", backup_dst_path, oldest_file);
-            println!("Removing old back up file: {}", file_path);
+            info!("Delete old back up file: {}", file_path);
             fs::remove_file(&file_path)
                 .map_err(|e| format!("Failed to delete oldest backup file '{}': {}", file_path, e))
         } else {

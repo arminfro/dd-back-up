@@ -51,10 +51,12 @@ impl Lsblk {
         let available_devices = Self::available_devices(&lsblk_output);
         let available_filesystems = Self::available_filesystems(&lsblk_output);
 
-        Ok(Lsblk {
+        let lsblk = Lsblk {
             available_devices,
             available_filesystems,
-        })
+        };
+        debug!("{:?}", lsblk);
+        Ok(lsblk)
     }
 
     /// Filters and returns the available devices from the lsblk output.

@@ -23,7 +23,6 @@ pub struct BackupArgs {
 
 pub fn run(backup_args: &BackupArgs, config: &Config) -> Result<(), String> {
     let lsblk = Lsblk::new()?;
-    // eprintln!("DEBUGPRINT[2]: mod.rs:17: lsblk={:#?}", lsblk);
 
     for backup_config in &config.backups {
         if let Some(backups) = Backups::new(backup_config, &lsblk, backup_args, config)? {

@@ -1,11 +1,14 @@
 use std::path::Path;
 
+use chrono::Local;
+use chrono_humanize::Humanize;
 use relative_path::RelativePath;
 
 use crate::run::utils::current_date;
 
 use super::{command_output::command_output, device::Device, filesystem::Filesystem, BackupArgs};
 
+#[derive(Debug)]
 pub struct Backup<'a> {
     /// The destination filesystem for the backup.
     pub dst_filesystem: &'a Filesystem,
@@ -27,11 +30,13 @@ impl<'a> Backup<'a> {
         backup_device: &'a Device,
         backup_args: &'a BackupArgs,
     ) -> Backup<'a> {
-        Backup {
+        let backup = Backup {
             dst_filesystem,
             backup_device,
             backup_args,
-        }
+        };
+        debug!("{:?}", backup);
+        backup
     }
 
     /// Runs the backup process using the `dd` command.
@@ -49,20 +54,24 @@ impl<'a> Backup<'a> {
         let description = format!("run dd command: {:?}", &command_parts.join(" "));
         match self.backup_args.dry {
             true => {
-                println!(
-                    "[Dry-Run] backup would run with command: {}",
+                info!(
+                    "[DRY RUN] backup would run with command: {}",
                     &command_parts.join(" "),
                 );
                 Ok(())
             }
             false => {
+                let time_before_dd = Local::now();
                 let output =
                     command_output(command_parts.clone(), description.as_str(), Some(true))?;
 
                 if output.status.success() {
-                    println!(
-                        "Success running backup with dd command {}: {}",
+                    let time_after_dd = Local::now();
+                    let diff = time_after_dd - time_before_dd;
+                    info!(
+                        "Success running backup with dd command {} for {}: {}",
                         &command_parts.join(" "),
+                        diff.humanize(),
                         String::from_utf8_lossy(&output.stdout).to_string()
                     );
 
@@ -100,8 +109,8 @@ impl<'a> Backup<'a> {
             command_parts,
             "change owner of backup file to $UID",
             Some(true),
-        )
-        .map(|_| ())
+        )?;
+        Ok(())
     }
 
     /// Returns the output dir path for the backup.
@@ -185,9 +194,19 @@ impl<'a> Backup<'a> {
     /// Side-Effect: Deletes the oldest backup file if the number of existing backups exceeds the specified number of copies.
     fn delete_oldest_backup_if_needed(&self) -> Result<bool, String> {
         let needs_deletion = self.needs_deletion();
-        if needs_deletion && !self.backup_args.dry {
-            self.dst_filesystem
-                .delete_oldest_backup(&self.suffix_file_name_pattern(), &self.backup_dir_path())?;
+        if needs_deletion {
+            if self.backup_args.dry {
+                info!(
+                    "[DRY RUN] Would delete oldest backup file with suffix: {} in {}",
+                    self.suffix_file_name_pattern(),
+                    self.backup_dir_path()
+                );
+            } else {
+                self.dst_filesystem.delete_oldest_backup(
+                    &self.suffix_file_name_pattern(),
+                    &self.backup_dir_path(),
+                )?;
+            }
         }
         Ok(needs_deletion)
     }
@@ -214,7 +233,7 @@ impl<'a> Backup<'a> {
                 }
             }
         }
-        println!("Could not check if sufficient space is available");
+        warn!("Could not check if sufficient space is available");
         Ok(())
     }
 
@@ -233,7 +252,7 @@ impl<'a> Backup<'a> {
 
         if path.exists() && path.is_file() {
             Err(format!(
-                "Backup file is already present {}. Skipping. If you want to do more than 1 backup per day, rename file manually",
+                "Backup file for today is already present {}. Skipping it",
                 file_path
             ))
         } else {
