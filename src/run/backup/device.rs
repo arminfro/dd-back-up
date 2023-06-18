@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::dd_backup::{config::BackupDevice, utils::convert_to_byte_size};
+use crate::run::{config::BackupDevice, utils::convert_to_byte_size};
 
 use super::lsblk::BlockDevice;
 

@@ -56,6 +56,11 @@ impl Config {
     /// - `Ok(Config)`: If the configuration file is successfully read and parsed.
     /// - `Err(String)`: If there is an error reading or parsing the configuration file.
     pub fn new(config_file_path: &Option<String>) -> Result<Config, String> {
+        trace!("some trace log");
+        debug!("some debug log");
+        info!("some information log");
+        warn!("some warning log");
+        error!("some error log");
         Self::validate_config(Self::read_config_file(config_file_path))
     }
 
