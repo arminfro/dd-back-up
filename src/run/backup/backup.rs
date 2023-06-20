@@ -167,11 +167,15 @@ impl<'a> Backup<'a> {
     }
 
     /// Checks if the number of existing backups exceeds the specified number of copies.
+    /// If the copies is `None` then return false
     fn needs_deletion(&self) -> bool {
         let present_number_of_copies = self
             .dst_filesystem
             .present_number_of_copies(&self.suffix_file_name_pattern(), &self.backup_dir_path());
-        present_number_of_copies >= self.backup_device.copies as usize
+        match self.backup_device.copies {
+            Some(copies) => present_number_of_copies >= copies,
+            None => false,
+        }
     }
 
     /// Validates the state of the backup process by performing the following checks:

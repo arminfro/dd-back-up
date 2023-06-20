@@ -19,7 +19,7 @@ pub struct Device {
     /// The destination path for the device.
     pub destination_path: String,
     /// The number of copies to be kept for this device.
-    pub copies: usize,
+    pub copies: Option<usize>,
 }
 
 impl Device {

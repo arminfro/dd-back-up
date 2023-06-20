@@ -62,9 +62,9 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
 
     - obtain the serial with tools like `lsblk -n -o NAME,SERIAL`
 
-    - `copies`: The number of copies to be kept for this device. If specified, the oldest backup will be deleted when creating a new backup if the number of backups exceeds the specified count.
+    - `copies`: The number of copies to be kept for this device. If specified, the oldest backup will be deleted when creating a new backup if the number of backups exceeds the specified count. If not specified, nothing will be deleted.
 
-      - Optional, defaults to 1
+      - Optional, defaults to None.
 
       - Note: If you decrease the value of copies after a while, you may need to manually delete backup files until you have the desired number of copies. Otherwise, the program will continue to delete only one backup per run, which may result in the same count as before decreasing.
 
