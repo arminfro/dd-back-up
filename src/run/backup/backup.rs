@@ -214,7 +214,7 @@ impl<'a> Backup<'a> {
     /// Checks if the target filesystem has enough space to accommodate the backup of the device.
     /// It compares the available space on the filesystem with the total size of the device to be backed up.
     /// If there is sufficient space, `Ok(())` is returned, indicating that the backup can proceed.
-    /// If there is not enough space, an error is returned with a descriptive message.
+    /// If there is not enough space or if it couldn't be read, an error is returned with a descriptive message.
     /// If either available_space or needed_space is None then proceed with an Ok as well.
     fn target_filesystem_has_enough_space(&self) -> Result<(), String> {
         let available_space = self.dst_filesystem.available_space()?;
@@ -233,8 +233,7 @@ impl<'a> Backup<'a> {
                 }
             }
         }
-        warn!("Could not check if sufficient space is available");
-        Ok(())
+        Err("Could not check if sufficient space is available".to_string())
     }
 
     /// Checks if the target backup file is already present.
