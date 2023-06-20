@@ -77,22 +77,37 @@ impl<'a> Backups<'a> {
     }
 
     /// Executes the backup process.
-    /// Mount filesystems if needed, do backups pairs matching the conditions, unmount
+    /// Checks filesystem with `fsck` before mounting it (eventually unmount first).
+    /// If fsck was successfull, do backups pairs matching the conditions, unmount
+    /// If fsck was not successfull, dst_filesystem will be skipped
     /// Returns `Ok(())` if the backup process is successful, otherwise returns an error message.
     pub fn run(mut self) -> Result<(), String> {
-        if !self.dst_filesystem.is_mounted() {
-            self.dst_filesystem.mount()?;
+        if self.dst_filesystem.is_mounted() {
+            self.dst_filesystem.unmount()?;
         }
 
-        for backup_device in &self.backup_devices {
-            if let Err(err) =
-                Backup::new(&self.dst_filesystem, &backup_device, self.backup_args).run()
-            {
-                error!("Error performing backup: {}", err);
+        match self.dst_filesystem.validate_fsck() {
+            Ok(()) => {
+                self.dst_filesystem.mount()?;
+
+                for backup_device in &self.backup_devices {
+                    if let Err(err) =
+                        Backup::new(&self.dst_filesystem, &backup_device, self.backup_args).run()
+                    {
+                        error!("Error performing backup: {}", err);
+                    }
+                }
+
+                self.dst_filesystem.unmount()?;
+                Ok(())
+            }
+            Err(e) => {
+                error!(
+                    "{}, skipping backups for filesystem {}",
+                    e, self.dst_filesystem.device_path
+                );
+                Ok(())
             }
         }
-
-        self.dst_filesystem.unmount()?;
-        Ok(())
     }
 }

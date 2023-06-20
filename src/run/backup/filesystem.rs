@@ -246,4 +246,18 @@ impl Filesystem {
             .collect::<Vec<String>>();
         Ok(present_backup_files)
     }
+
+    pub fn validate_fsck(&self) -> Result<(), String> {
+        let output = command_output(
+            vec!["fsck", "-n", self.device_path.as_str()],
+            "check fs",
+            Some(true),
+        )?;
+
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err("ATTENTION: fsck was not successfull".to_string())
+        }
+    }
 }
