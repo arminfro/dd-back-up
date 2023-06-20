@@ -46,57 +46,49 @@ impl Device {
         available_devices: &[BlockDevice],
         destination_path: Option<String>,
     ) -> Result<Option<Device>, String> {
-        let serial_filtered_lsblk =
-            Self::validate_serial_uniq(&backup_device.serial, available_devices)?;
-
-        let device = Self::validate_present_serial(serial_filtered_lsblk)
-            .filter(|blockdevice| {
-                !(Self::is_device_mounted(&format!("/dev/{}", &blockdevice.name))
-                    .ok()
-                    .unwrap_or(false))
-            })
-            .map(|blockdevice| Device {
-                blockdevice: blockdevice.clone(),
-                device_path: format!("/dev/{}", &blockdevice.name),
-                name: backup_device.name.clone(),
-                destination_path: destination_path.unwrap_or("./".to_string()),
-                copies: backup_device.copies.unwrap_or(1),
-            });
-        match &device {
-            Some(device) => debug!("{:?}", device),
-            None => info!(
-                "Device with serial {}, not found, skipping it",
-                backup_device.serial
-            ),
-        }
-        Ok(device)
-    }
-
-    /// Validates the presence of a unique device with the specified serial number.
-    fn validate_present_serial(serial_filtered_lsblk: Vec<&BlockDevice>) -> Option<&BlockDevice> {
-        if serial_filtered_lsblk.len() == 1 {
-            Some(serial_filtered_lsblk[0])
-        } else {
-            None
+        match Self::validate_serial(&backup_device.serial, available_devices) {
+            Ok(blockdevice) => {
+                if !Self::is_device_mounted(&format!("/dev/{}", &blockdevice.name))? {
+                    Ok(Some(Device {
+                        blockdevice: blockdevice.clone(),
+                        device_path: format!("/dev/{}", &blockdevice.name),
+                        name: backup_device.name.clone(),
+                        destination_path: destination_path.unwrap_or("./".to_string()),
+                        copies: backup_device.copies,
+                    }))
+                } else {
+                    Ok(None)
+                }
+            }
+            Err(e) => {
+                warn!("{}, skipping it", e);
+                Ok(None)
+            }
         }
     }
 
     /// Filters the available devices to those with the specified serial number,
-    /// ensuring uniqueness.
-    fn validate_serial_uniq<'a>(
+    /// ensuring uniqueness and presence of device
+    fn validate_serial<'a>(
         serial: &str,
         available_devices: &'a [BlockDevice],
-    ) -> Result<Vec<&'a BlockDevice>, String> {
+    ) -> Result<&'a BlockDevice, String> {
         let serial_filtered_lsblk: Vec<&BlockDevice> = available_devices
             .iter()
-            .filter(|blockdevice| blockdevice.serial.as_deref() == Some(serial))
+            .filter(|blockdevice| blockdevice.serial.clone().unwrap() == serial)
             .collect();
 
-        if serial_filtered_lsblk.len() <= 1 {
-            Ok(serial_filtered_lsblk)
-        } else {
-            Err(format!("Not a unique serial: {}", serial))
+        let is_device_serial_uniq = serial_filtered_lsblk.len() <= 1;
+        let is_device_available = serial_filtered_lsblk.len() != 0;
+
+        if is_device_available {
+            if is_device_serial_uniq {
+                return Ok(serial_filtered_lsblk[0]);
+            } else {
+                return Err(format!("Device has not a unique serial: {}", serial));
+            }
         }
+        Err(format!("Device not found: {}", serial))
     }
 
     /// Checks if the specified device is currently mounted by querying `/proc/mounts`.
@@ -112,7 +104,7 @@ impl Device {
             if let Ok(entry) = line {
                 let fields: Vec<&str> = entry.split(' ').collect();
                 if fields.len() >= 2 && fields[0].contains(device_path) {
-                    warn!("Device {} is mounted, skipping it", device_path);
+                    error!("Device {} is mounted, skipping it", device_path);
                     return Ok(true);
                 }
             }
