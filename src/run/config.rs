@@ -29,11 +29,22 @@ pub struct BackupConfig {
     /// Since some devices may not have a serial number or even have duplicated serial numbers,
     /// the identifier serves as a unique identifier for the device.
     pub backup_devices: Vec<BackupDevice>,
+
     /// The UUID of the destination backup filesystem or partition.
     pub uuid: String,
+
     /// The destination path where the backup will be stored.
     /// If not provided, the default path will be used.
     pub destination_path: Option<String>,
+
+    /// The command to execute the filesystem check (`fsck`).
+    /// If not provided, the default `fsck` command will be used.
+    pub fsck_command: Option<String>,
+
+    /// Whether to skip the filesystem check.
+    /// If set to `true`, the filesystem check will be skipped.
+    /// If set to `false` or not specified, the filesystem check will be performed.
+    pub skip_fsck: Option<bool>,
 }
 
 /// Represents the configuration containing multiple backup configurations.

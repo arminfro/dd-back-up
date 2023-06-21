@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::run::utils::convert_to_byte_size;
+use crate::run::{config::BackupConfig, utils::convert_to_byte_size};
 
 use super::{
     command_output::command_output,
@@ -18,6 +18,8 @@ pub struct Filesystem {
     pub mountpath: String,
     // The available size of the block device
     pub fsavail: Option<u64>,
+    pub fsck_command: String,
+    pub skip_fsck: bool,
 }
 
 impl Filesystem {
@@ -39,11 +41,12 @@ impl Filesystem {
     /// - `Ok(None)`: If no match is found based on the UUID.
     /// - `Err(String)`: If the UUID is not unique among the available filesystems.
     pub fn new(
-        uuid: &str,
+        backup_config: &BackupConfig,
         available_filesystems: &Vec<BlockDevice>,
         mountpath: Option<String>,
     ) -> Result<Option<Filesystem>, String> {
-        let uuid_filtered_lsblk = Self::validate_uuid_uniq(uuid, available_filesystems)?;
+        let uuid_filtered_lsblk =
+            Self::validate_uuid_uniq(&backup_config.uuid, available_filesystems)?;
 
         match Self::validate_present_uuid(uuid_filtered_lsblk) {
             Some(blockdevice) => {
@@ -56,12 +59,20 @@ impl Filesystem {
                         .clone()
                         .map(|fsavail| convert_to_byte_size(&fsavail).unwrap_or(None))
                         .unwrap_or(None),
+                    fsck_command: backup_config
+                        .fsck_command
+                        .clone()
+                        .unwrap_or("fsck -n".to_string()),
+                    skip_fsck: backup_config.skip_fsck.unwrap_or(false),
                 };
                 debug!("{:?}", filesystem);
                 Ok(Some(filesystem))
             }
             None => {
-                info!("Filesystem with uuid {}, not found, skipping it", uuid);
+                info!(
+                    "Filesystem with uuid {}, not found, skipping it",
+                    &backup_config.uuid
+                );
                 Ok(None)
             }
         }
@@ -247,17 +258,31 @@ impl Filesystem {
         Ok(present_backup_files)
     }
 
+    /// Validates the filesystem check configuration.
+    ///
+    /// If the `skip_fsck` field is set to `true`, this function returns `Ok(())` without performing any checks.
+    /// If the `skip_fsck` field is set to `false` or not specified, this function executes the `fsck` command
+    /// specified in the `fsck_command` (otherwise `fsck -n /dev/path1`) field and checks if the command succeeded.
+    /// If the command succeeds, it returns `Ok(())`. Otherwise, it returns an `Err` with an error message.
     pub fn validate_fsck(&self) -> Result<(), String> {
-        let output = command_output(
-            vec!["fsck", "-n", self.device_path.as_str()],
-            "check fs",
-            Some(true),
-        )?;
+        match self.skip_fsck {
+            true => Ok(()),
+            false => {
+                let fsck_command = &self.fsck_command;
+                let mut command_parts: Vec<&str> = fsck_command
+                    .split(" ")
+                    .map(|command_part| command_part.clone())
+                    .collect();
+                command_parts.push(self.device_path.as_str());
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err("ATTENTION: fsck was not successfull".to_string())
+                let output = command_output(command_parts, "check fs", Some(true))?;
+
+                if output.status.success() {
+                    Ok(())
+                } else {
+                    Err("ATTENTION: fsck was not successfull".to_string())
+                }
+            }
         }
     }
 }

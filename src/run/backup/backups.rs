@@ -39,7 +39,7 @@ impl<'a> Backups<'a> {
         config: &'a Config,
     ) -> Result<Option<Backups<'a>>, String> {
         let dst_filesystem = Filesystem::new(
-            &backup_config.uuid,
+            &backup_config,
             &lsblk.available_filesystems,
             config.mountpath.clone(),
         )?;
