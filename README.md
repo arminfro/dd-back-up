@@ -120,8 +120,6 @@ If either of them is not found, the corresponding pair will be skipped during th
 
 ### Running the Backup:
 
-Once you have configured the backup settings, you can run the backup process by executing `dd_backup run`.
-
 Make sure to **exercise caution** when specifying the backup devices and the target filesystem/partition.
 Use the `--dry-run` flag to see what devices would be backed up before running it.
 
@@ -135,7 +133,7 @@ Usage: dd_backup run [OPTIONS]
 Options:
   -n, --dry-run
           Performs a dry run, simulating backup operations without making any changes [default: "false"]
-  -c, --config-file-path <CONFIG_FILE_PATH> [default: "~/.config/dd_backup"]
+  -c, --config-file-path <CONFIG_FILE_PATH> [default: "~/.config/dd_backup.json"]
           The path to the configuration file
       --destination-uuid <DESTINATION_UUID>
           The UUID of the destination backup filesystem or partition, single-back-up-only
@@ -174,7 +172,7 @@ You can also provide any other configurable option for a backup device defined i
 
 Providing a custom name for the backup allows you to differentiate between multiple backups with the same source serial number, providing more flexibility and organization.
 
-These options are not allowed in conjunction with the config file option (`-c, --config-file-path`), as they are intended for one-time backup scenarios.
+These options are not allowed in conjunction with the config file option (`-c, --config-file-path`), as they are intended for one-time backup scenarios. Also the default config file is not picked up when using it.
 
 #### Logging
 

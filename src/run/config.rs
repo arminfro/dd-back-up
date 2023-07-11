@@ -113,7 +113,7 @@ impl Config {
     ///
     /// - `Ok(Config)`: If the configuration is valid.
     /// - `Err(String)`: If the configuration is not valid, with a descriptive error message.
-    fn validate_config(config: Result<Config, String>) -> Result<Config, String> {
+    pub fn validate_config(config: Result<Config, String>) -> Result<Config, String> {
         let config = config?;
 
         // Check for unique UUIDs

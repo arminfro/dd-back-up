@@ -116,43 +116,38 @@ pub fn run(backup_args: &BackupArgs) -> Result<(), String> {
 /// A `Result` containing the resulting `Config` object if the conversion is successful, or an error message as `String`
 /// if an error occurs during the conversion.
 fn backup_args_to_config(backup_args: &BackupArgs) -> Result<Config, String> {
-    let mut config: Config = if let Some(file_config_args) = &backup_args.file_config_args {
-        Config::new(&file_config_args.config_file_path)
-    } else {
-        Config::new(&None)
+    let config: Config = match &backup_args.file_config_args {
+        Some(file_config_args) => Config::new(&file_config_args.config_file_path),
+        None => match &backup_args.single_backup_args {
+            Some(single_backup_args) => {
+                let source_serial = single_backup_args.source_serial.clone().ok_or(
+                    "Source serial needs to be provided in single backup mode, like: `--source-serial x...x`",
+                )?;
+                let destination_uuid = single_backup_args.destination_uuid.clone().ok_or(
+                    "Destination UUID needs to be provided in single backup mode, like: `--destination-uuid x...x`",
+                )?;
+
+                let config = Config {
+                    mountpath: Some(backup_args.mountpath.clone().unwrap_or("/mnt".to_string())),
+                    backups: vec![BackupConfig {
+                        backup_devices: vec![BackupDevice {
+                            serial: source_serial,
+                            name: single_backup_args.name.clone(),
+                            copies: single_backup_args.copies.clone(),
+                        }],
+                        uuid: destination_uuid,
+                        destination_path: single_backup_args.destination_path.clone(),
+                        fsck_command: Some(single_backup_args.fsck_command.clone()),
+                        skip_fsck: Some(single_backup_args.skip_fsck || single_backup_args.skip_mount),
+                        skip_mount: Some(single_backup_args.skip_mount.clone()),
+                    }]
+                };
+                Config::validate_config(Ok(config))
+            },
+            None => Config::new(&None),
+        },
     }
     .map_err(|e| format!("Failed to create Config struct object: {}", e))?;
-
-    config.mountpath = Some(
-        backup_args
-            .mountpath
-            .clone()
-            .unwrap_or(config.mountpath.clone().unwrap_or("/mnt".to_string())),
-    );
-
-    config.backups = if let Some(single_backup_args) = &backup_args.single_backup_args {
-        let source_serial = single_backup_args.source_serial.clone().ok_or(
-            "Source serial needs to be provided in single backup mode, like: `--source-serial x...x`",
-        )?;
-        let destination_uuid = single_backup_args.destination_uuid.clone().ok_or(
-            "Destination UUID needs to be provided in single backup mode, like: `--destination-uuid x...x`",
-        )?;
-
-        vec![BackupConfig {
-            backup_devices: vec![BackupDevice {
-                serial: source_serial,
-                name: single_backup_args.name.clone(),
-                copies: single_backup_args.copies.clone(),
-            }],
-            uuid: destination_uuid,
-            destination_path: single_backup_args.destination_path.clone(),
-            fsck_command: Some(single_backup_args.fsck_command.clone()),
-            skip_fsck: Some(single_backup_args.skip_fsck || single_backup_args.skip_mount),
-            skip_mount: Some(single_backup_args.skip_mount.clone()),
-        }]
-    } else {
-        config.backups
-    };
 
     Ok(config)
 }
