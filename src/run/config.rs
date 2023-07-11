@@ -34,8 +34,8 @@ pub struct BackupConfig {
     pub uuid: String,
 
     /// The destination path where the backup will be stored.
-    /// If not provided, the default path will be used.
-    pub destination_path: String,
+    /// If not provided, the default path "./" will be used.
+    pub destination_path: Option<String>,
 
     /// The command to execute the filesystem check (`fsck`).
     /// If not provided, the default `fsck -n` command will be used.
@@ -45,6 +45,11 @@ pub struct BackupConfig {
     /// If set to `true`, the filesystem check will be skipped.
     /// If set to `false` or not specified, the filesystem check will be performed.
     pub skip_fsck: Option<bool>,
+
+    /// Whether to skip the mount and unmount process
+    /// If set to `true`, the mounting will be skipped.
+    /// If set to `false` or not specified, mounting will be performed.
+    pub skip_mount: Option<bool>,
 }
 
 /// Represents the configuration containing multiple backup configurations.

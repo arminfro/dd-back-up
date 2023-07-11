@@ -48,6 +48,7 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
       "destination_path": "./",
       "fsck_command": "fsck -n",
       "skip_fsck": false,
+      "skip_mount": false,
       "backup_devices": [
         {
           "serial": "device-serial-1",
@@ -59,6 +60,10 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
           "name": "laptop"
         }
       ]
+    },
+    {
+      "uuid": "dst-back-up-fs-uuid-2",
+      "backup_devices": [{ "serial": "device-serial-3" }, { "serial": "device-serial-4" }]
     },
     {
       ...
@@ -92,6 +97,10 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
   - `skip_fsck`: Configures whether to skip the filesystem check (fsck) altogether.
 
     - Optional field. Defaults to `false`. If set to `true`, the filesystem check will be skipped.
+
+  - `skip_mount`: Configures whether to mount the filesystem or not.
+
+    - Optional field. Defaults to `false`. If set to `true`, the filesystem won't be mounted. Use it if your filesystem is already mounted and should remain mounted after the backup process. Sets `skip_fsck` to `true`.
 
   - `backup_devices`: An array of devices to be backed up on the destination filesystem. Each device is specified by its serial number and an optional name.
 
@@ -142,6 +151,8 @@ Options:
           Alternative command to perform filesystem check (`fsck -n`), single-back-up-only [default: "fsck -n"]
       --skip-fsck
           Flag to skip filesystem check (`fsck`), single-back-up-only [default: "false"]
+      --skip-mount
+          Flag to skip mounting, single-back-up-only [default: "false"]
   -m, --mountpath <MOUNTPATH>
           The mount path of the destination filesystem, overwrites config value [default: "/mnt"]
   -h, --help

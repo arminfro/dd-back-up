@@ -50,9 +50,9 @@ pub struct SingleBackupArgs {
 
     #[clap(long, default_value = "./")]
     /// The destination path where the backup will be stored, single-back-up-only.
-    pub destination_path: String,
+    pub destination_path: Option<String>,
 
-    #[clap(long)]
+    #[clap(long, default_value = None)]
     /// The number of backup copies to maintain, single-back-up-only.
     pub copies: Option<usize>,
 
@@ -67,6 +67,10 @@ pub struct SingleBackupArgs {
     #[clap(long)]
     /// Flag to skip filesystem check (`fsck`), single-back-up-only.
     pub skip_fsck: bool,
+
+    #[clap(long)]
+    /// Flag to skip mounting, single-back-up-only.
+    pub skip_mount: bool,
 }
 
 /// Runs the backup process based on the provided command-line arguments.
@@ -143,7 +147,8 @@ fn backup_args_to_config(backup_args: &BackupArgs) -> Result<Config, String> {
             uuid: destination_uuid,
             destination_path: single_backup_args.destination_path.clone(),
             fsck_command: Some(single_backup_args.fsck_command.clone()),
-            skip_fsck: Some(single_backup_args.skip_fsck.clone()),
+            skip_fsck: Some(single_backup_args.skip_fsck || single_backup_args.skip_mount),
+            skip_mount: Some(single_backup_args.skip_mount.clone()),
         }]
     } else {
         config.backups

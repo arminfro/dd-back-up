@@ -264,7 +264,7 @@ impl Filesystem {
     /// If the `skip_fsck` field is set to `false` or not specified, this function executes the `fsck` command
     /// specified in the `fsck_command` (otherwise `fsck -n /dev/path1`) field and checks if the command succeeded.
     /// If the command succeeds, it returns `Ok(())`. Otherwise, it returns an `Err` with an error message.
-    pub fn validate_fsck(&self) -> Result<(), String> {
+    pub fn validate_fsck_or_skip(&self) -> Result<(), String> {
         match self.skip_fsck {
             true => Ok(()),
             false => {

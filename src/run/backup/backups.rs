@@ -14,6 +14,7 @@ pub struct Backups<'a> {
     pub backup_devices: Vec<Device>,
     /// The command line arguments for the backup operation.
     pub backup_args: &'a BackupArgs,
+    pub skip_mount: bool,
 }
 
 impl<'a> Backups<'a> {
@@ -52,7 +53,10 @@ impl<'a> Backups<'a> {
                     Device::new(
                         &backup_device,
                         &lsblk.available_devices,
-                        backup_config.destination_path.clone(),
+                        backup_config
+                            .destination_path
+                            .clone()
+                            .unwrap_or("/.".to_string()),
                     )
                 })
                 .collect();
@@ -68,6 +72,7 @@ impl<'a> Backups<'a> {
                 dst_filesystem,
                 backup_devices,
                 backup_args,
+                skip_mount: backup_config.skip_mount.unwrap_or(false),
             };
             debug!("{:?}", backups);
             Ok(Some(backups))
@@ -82,13 +87,15 @@ impl<'a> Backups<'a> {
     /// If fsck was not successfull, dst_filesystem will be skipped
     /// Returns `Ok(())` if the backup process is successful, otherwise returns an error message.
     pub fn run(mut self) -> Result<(), String> {
-        if self.dst_filesystem.is_mounted() {
+        if !self.skip_mount && self.dst_filesystem.is_mounted() {
             self.dst_filesystem.unmount()?;
         }
 
-        match self.dst_filesystem.validate_fsck() {
+        match self.dst_filesystem.validate_fsck_or_skip() {
             Ok(()) => {
-                self.dst_filesystem.mount()?;
+                if !self.skip_mount {
+                    self.dst_filesystem.mount()?;
+                }
 
                 for backup_device in &self.backup_devices {
                     if let Err(err) =
@@ -98,7 +105,9 @@ impl<'a> Backups<'a> {
                     }
                 }
 
-                self.dst_filesystem.unmount()?;
+                if !self.skip_mount {
+                    self.dst_filesystem.unmount()?;
+                }
                 Ok(())
             }
             Err(e) => {
