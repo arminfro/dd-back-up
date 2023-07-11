@@ -161,14 +161,20 @@ Options:
           Print version
 ```
 
-The `run` command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
+The `run` command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem (if not configured otherwise).
+
 The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the date, the backup device name, the model and the serial.
 
 ##### Performing Single Backup
 
 There are also options available for performing a single backup. These options are useful if you want to trigger a specific backup process with cron jobs, or if you have a card reader and want to back up different SD cards individually.
 
-By using the single-backup options, you must specify the source serial number and destination UUID for a single backup operation. Additionally, you can provide a custom name for the backup, allowing you to differentiate between multiple backups with the same source serial number. These options are not allowed in conjunction with the config file option (-c, --config-file-path), as they are intended for one-time backup scenarios.
+When using the single-backup options, it is necessary to specify the source serial number and destination UUID for the specific backup operation.
+You can also provide any other configurable option for a backup device defined in the `backup_devices` array.
+
+Providing a custom name for the backup allows you to differentiate between multiple backups with the same source serial number, providing more flexibility and organization.
+
+These options are not allowed in conjunction with the config file option (`-c, --config-file-path`), as they are intended for one-time backup scenarios.
 
 #### Logging
 
