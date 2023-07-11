@@ -119,17 +119,43 @@ Once you have configured the backup settings, you can run the backup process by 
 Usage: dd_backup run [OPTIONS]
 
 Options:
-  -d, --dry
-          performs a dry run, no dd operation, just to see the output
+  -n, --dry-run
+          Performs a dry run, simulating backup operations without making any changes
   -c, --config-file-path <CONFIG_FILE_PATH>
-          pass in the path of the config file
+          The path to the configuration file
+      --destination-uuid <DESTINATION_UUID>
+          The UUID of the destination backup filesystem or partition, single-back-up-only
+      --source-serial <SOURCE_SERIAL>
+          The serial number of the source device to be backed up, single-back-up-only
+      --destination-path <DESTINATION_PATH>
+          The destination path where the backup will be stored, single-back-up-only [default: ./]
+      --copies <COPIES>
+          The number of backup copies to maintain, single-back-up-only
+      --name <NAME>
+          The name of the backup, single-back-up-only
+      --fsck-command <FSCK_COMMAND>
+          Alternative command to perform filesystem check (`fsck -n`), single-back-up-only [default: "fsck -n"]
+      --skip-fsck
+          Flag to skip filesystem check (`fsck`), single-back-up-only
+  -m, --mountpath <MOUNTPATH>
+          The mount path of the destination filesystem, overwrites config value
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 
 The `run` command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
 The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the date, the backup device name, the model and the serial.
 
-Make sure to exercise caution when specifying the backup devices and the target filesystem/partition.
-Use the `--dry` flag to see what devices would be backed up before running it.
+There are also options available for performing a single backup. These options are useful if you want to trigger a specific backup process, such as through cron jobs, or if you have a card reader and want to back up different SD cards individually.
+
+By using the single-backup options, you can specify the source serial number and destination UUID for a single backup operation. Additionally, you can provide a custom name for the backup, allowing you to differentiate between multiple backups with the same source serial number. These options are not allowed in conjunction with the config file option (-c, --config-file-path), as they are intended for one-time backup scenarios.
+
+It's important to note that when using the single backup options, the config file (which may is located in the default place) is ignored.
+
+Make sure to **exercise caution** when specifying the backup devices and the target filesystem/partition.
+Use the `--dry-run` flag to see what devices would be backed up before running it.
 
 #### Logging
 

@@ -35,10 +35,10 @@ pub struct BackupConfig {
 
     /// The destination path where the backup will be stored.
     /// If not provided, the default path will be used.
-    pub destination_path: Option<String>,
+    pub destination_path: String,
 
     /// The command to execute the filesystem check (`fsck`).
-    /// If not provided, the default `fsck` command will be used.
+    /// If not provided, the default `fsck -n` command will be used.
     pub fsck_command: Option<String>,
 
     /// Whether to skip the filesystem check.

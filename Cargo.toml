@@ -2,6 +2,9 @@
 name = "dd_backup"
 version = "0.1.0"
 edition = "2021"
+author = "arminfro"
+about = "about"
+long_about = "long_about"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

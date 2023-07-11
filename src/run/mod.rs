@@ -4,10 +4,7 @@ pub mod utils;
 
 use clap::{Parser, Subcommand};
 
-use self::{
-    backup::{run as backup_run, BackupArgs},
-    config::Config,
-};
+use self::backup::{run as backup_run, BackupArgs};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -23,15 +20,20 @@ enum Commands {
     Run(BackupArgs),
 }
 
+/// Runs the backup process.
+///
+/// This function is responsible for parsing the command line arguments and executing the backup process.
+///
+/// # Errors
+///
+/// Returns an error if the backup process fails to run.
 pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
 
     trace!("CLI command matching {:?}", &cli.command);
     match &cli.command {
         Commands::Run(backup_args) => {
-            let config = Config::new(&backup_args.config_file_path)
-                .map_err(|e| format!("Failed to create Config struct object: {}", e))?;
-            backup_run(backup_args, &config).map_err(|e| format!("Failed to run backups: {}", e))
+            backup_run(backup_args).map_err(|e| format!("Failed to run backups: {}", e))
         }
     }
 }

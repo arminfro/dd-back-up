@@ -44,7 +44,7 @@ impl Device {
     pub fn new(
         backup_device: &BackupDevice,
         available_devices: &[BlockDevice],
-        destination_path: Option<String>,
+        destination_path: String,
     ) -> Result<Option<Device>, String> {
         match Self::validate_serial(&backup_device.serial, available_devices) {
             Ok(blockdevice) => {
@@ -53,8 +53,8 @@ impl Device {
                         blockdevice: blockdevice.clone(),
                         device_path: format!("/dev/{}", &blockdevice.name),
                         name: backup_device.name.clone(),
-                        destination_path: destination_path.unwrap_or("./".to_string()),
                         copies: backup_device.copies,
+                        destination_path,
                     }))
                 } else {
                     Ok(None)

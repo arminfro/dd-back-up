@@ -52,7 +52,7 @@ impl<'a> Backup<'a> {
         let output_file_arg = format!("of={}", self.backup_file_path());
         let command_parts = vec!["dd", &input_file_arg, &output_file_arg, "status=progress"];
         let description = format!("run dd command: {:?}", &command_parts.join(" "));
-        match self.backup_args.dry {
+        match self.backup_args.dry_run {
             true => {
                 info!(
                     "[DRY RUN] backup would run with command: {}",
@@ -199,7 +199,7 @@ impl<'a> Backup<'a> {
     fn delete_oldest_backup_if_needed(&self) -> Result<bool, String> {
         let needs_deletion = self.needs_deletion();
         if needs_deletion {
-            if self.backup_args.dry {
+            if self.backup_args.dry_run {
                 info!(
                     "[DRY RUN] Would delete oldest backup file with suffix: {} in {}",
                     self.suffix_file_name_pattern(),
