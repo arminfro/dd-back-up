@@ -33,7 +33,7 @@ git clone https://github.com/arminfro/dd_backup.git && cd dd_backup && cargo ins
 
 ## Usage:
 
-To use dd_backup, you need to configure the backup settings in a JSON configuration file.
+To use dd_backup, you can configure the backup settings in a JSON configuration file or use options for single back up only.
 
 ### Configuration
 
@@ -113,15 +113,20 @@ If either of them is not found, the corresponding pair will be skipped during th
 
 Once you have configured the backup settings, you can run the backup process by executing `dd_backup run`.
 
+Make sure to **exercise caution** when specifying the backup devices and the target filesystem/partition.
+Use the `--dry-run` flag to see what devices would be backed up before running it.
+
 #### CLI Interface
+
+Options with no short flag are only for single backup execution.
 
 ```shell
 Usage: dd_backup run [OPTIONS]
 
 Options:
   -n, --dry-run
-          Performs a dry run, simulating backup operations without making any changes
-  -c, --config-file-path <CONFIG_FILE_PATH>
+          Performs a dry run, simulating backup operations without making any changes [default: "false"]
+  -c, --config-file-path <CONFIG_FILE_PATH> [default: "~/.config/dd_backup"]
           The path to the configuration file
       --destination-uuid <DESTINATION_UUID>
           The UUID of the destination backup filesystem or partition, single-back-up-only
@@ -136,9 +141,9 @@ Options:
       --fsck-command <FSCK_COMMAND>
           Alternative command to perform filesystem check (`fsck -n`), single-back-up-only [default: "fsck -n"]
       --skip-fsck
-          Flag to skip filesystem check (`fsck`), single-back-up-only
+          Flag to skip filesystem check (`fsck`), single-back-up-only [default: "false"]
   -m, --mountpath <MOUNTPATH>
-          The mount path of the destination filesystem, overwrites config value
+          The mount path of the destination filesystem, overwrites config value [default: "/mnt"]
   -h, --help
           Print help
   -V, --version
@@ -148,14 +153,11 @@ Options:
 The `run` command will mount the backup filesystem if necessary, perform the backup for each specified device, and finally unmount the filesystem.
 The file will have a name like `2023-06-15_desktop_Micro-Line_10170080910002B1.img`, containing the date, the backup device name, the model and the serial.
 
-There are also options available for performing a single backup. These options are useful if you want to trigger a specific backup process, such as through cron jobs, or if you have a card reader and want to back up different SD cards individually.
+##### Performing Single Backup
 
-By using the single-backup options, you can specify the source serial number and destination UUID for a single backup operation. Additionally, you can provide a custom name for the backup, allowing you to differentiate between multiple backups with the same source serial number. These options are not allowed in conjunction with the config file option (-c, --config-file-path), as they are intended for one-time backup scenarios.
+There are also options available for performing a single backup. These options are useful if you want to trigger a specific backup process with cron jobs, or if you have a card reader and want to back up different SD cards individually.
 
-It's important to note that when using the single backup options, the config file (which may is located in the default place) is ignored.
-
-Make sure to **exercise caution** when specifying the backup devices and the target filesystem/partition.
-Use the `--dry-run` flag to see what devices would be backed up before running it.
+By using the single-backup options, you must specify the source serial number and destination UUID for a single backup operation. Additionally, you can provide a custom name for the backup, allowing you to differentiate between multiple backups with the same source serial number. These options are not allowed in conjunction with the config file option (-c, --config-file-path), as they are intended for one-time backup scenarios.
 
 #### Logging
 
