@@ -17,6 +17,7 @@ pub fn convert_to_byte_size(size_str: &str) -> Result<Option<u64>, String> {
         .map_err(|e| format!("Error parsing unit size: {}", e))?;
 
     let size: Option<f64> = match unit {
+        'B' => Some(size_of_unit),
         'K' => Some(size_of_unit * 1024.0),
         'M' => Some(size_of_unit * 1024.0 * 1024.0),
         'G' => Some(size_of_unit * 1024.0 * 1024.0 * 1024.0),
@@ -28,5 +29,25 @@ pub fn convert_to_byte_size(size_str: &str) -> Result<Option<u64>, String> {
         Ok(Some(size.round() as u64))
     } else {
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_convert_to_byte_size() {
+        assert_eq!(convert_to_byte_size("0B"), Ok(Some(0)));
+        assert_eq!(convert_to_byte_size("100B"), Ok(Some(100)));
+        assert_eq!(convert_to_byte_size("1K"), Ok(Some(1024)));
+        assert_eq!(convert_to_byte_size("1M"), Ok(Some(1048576)));
+        assert_eq!(convert_to_byte_size("1G"), Ok(Some(1073741824)));
+        assert_eq!(convert_to_byte_size("1T"), Ok(Some(1099511627776)));
+        assert_eq!(convert_to_byte_size("100"), Ok(None));
+        assert_eq!(
+            convert_to_byte_size("1KB"),
+            Err("Error parsing unit size: invalid float literal".to_string())
+        );
     }
 }
