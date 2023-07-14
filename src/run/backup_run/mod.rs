@@ -5,8 +5,8 @@ mod device;
 mod filesystem;
 mod lsblk;
 
-use super::backup::backups::Backups;
-use super::backup::lsblk::Lsblk;
+use super::backup_run::backups::Backups;
+use super::backup_run::lsblk::Lsblk;
 use super::config::{BackupDevice, Config};
 use crate::run::config::BackupConfig;
 
@@ -133,13 +133,13 @@ fn backup_args_to_config(backup_args: &BackupArgs) -> Result<Config, String> {
                         backup_devices: vec![BackupDevice {
                             serial: source_serial,
                             name: single_backup_args.name.clone(),
-                            copies: single_backup_args.copies.clone(),
+                            copies: single_backup_args.copies,
                         }],
                         uuid: destination_uuid,
                         destination_path: single_backup_args.destination_path.clone(),
                         fsck_command: Some(single_backup_args.fsck_command.clone()),
                         skip_fsck: Some(single_backup_args.skip_fsck || single_backup_args.skip_mount),
-                        skip_mount: Some(single_backup_args.skip_mount.clone()),
+                        skip_mount: Some(single_backup_args.skip_mount),
                     }]
                 };
                 Config::validate_config(Ok(config))
@@ -154,7 +154,7 @@ fn backup_args_to_config(backup_args: &BackupArgs) -> Result<Config, String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::run::backup::{FileConfigArgs, SingleBackupArgs};
+    use crate::run::backup_run::{FileConfigArgs, SingleBackupArgs};
 
     use super::*;
 

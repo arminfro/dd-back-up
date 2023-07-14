@@ -1,4 +1,4 @@
-use crate::run::backup::backup::Backup;
+use crate::run::backup_run::backup::Backup;
 use crate::run::config::{BackupConfig, Config};
 
 use super::device::Device;
@@ -40,7 +40,7 @@ impl<'a> Backups<'a> {
         config: &'a Config,
     ) -> Result<Option<Backups<'a>>, String> {
         let dst_filesystem = Filesystem::new(
-            &backup_config,
+            backup_config,
             &lsblk.available_filesystems,
             config.mountpath.clone(),
         )?;
@@ -51,7 +51,7 @@ impl<'a> Backups<'a> {
                 .iter()
                 .map(|backup_device| {
                     Device::new(
-                        &backup_device,
+                        backup_device,
                         &lsblk.available_devices,
                         backup_config
                             .destination_path
@@ -65,7 +65,7 @@ impl<'a> Backups<'a> {
             let backup_devices: Vec<Device> = backup_devices_result
                 .map_err(|e| format!("Failed to create Device object: {}", e))?
                 .into_iter()
-                .filter_map(|x| x)
+                .flatten()
                 .collect();
 
             let backups = Backups {
@@ -99,7 +99,7 @@ impl<'a> Backups<'a> {
 
                 for backup_device in &self.backup_devices {
                     if let Err(err) =
-                        Backup::new(&self.dst_filesystem, &backup_device, self.backup_args).run()
+                        Backup::new(&self.dst_filesystem, backup_device, self.backup_args).run()
                     {
                         error!("Error performing backup: {}", err);
                     }

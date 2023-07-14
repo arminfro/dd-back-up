@@ -79,7 +79,7 @@ impl Device {
             .collect();
 
         let is_device_serial_uniq = serial_filtered_lsblk.len() <= 1;
-        let is_device_available = serial_filtered_lsblk.len() != 0;
+        let is_device_available = !serial_filtered_lsblk.is_empty();
 
         if is_device_available {
             if is_device_serial_uniq {
@@ -97,16 +97,14 @@ impl Device {
     /// or `Err(String)` if an error occurred while checking.
     fn is_device_mounted(device_path: &str) -> Result<bool, String> {
         let file = File::open("/proc/mounts")
-            .map_err(|e| format!("Failed to open /proc/mounts: {}", e.to_string()))?;
+            .map_err(|e| format!("Failed to open /proc/mounts: {}", e))?;
         let reader = BufReader::new(file);
 
-        for line in reader.lines() {
-            if let Ok(entry) = line {
-                let fields: Vec<&str> = entry.split(' ').collect();
-                if fields.len() >= 2 && fields[0].contains(device_path) {
-                    error!("Device {} is mounted, skipping it", device_path);
-                    return Ok(true);
-                }
+        for line in reader.lines().flatten() {
+            let fields: Vec<&str> = line.split(' ').collect();
+            if fields.len() >= 2 && fields[0].contains(device_path) {
+                error!("Device {} is mounted, skipping it", device_path);
+                return Ok(true);
             }
         }
         Ok(false)

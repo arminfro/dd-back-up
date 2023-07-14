@@ -20,14 +20,14 @@ pub fn command_output(
 ) -> Result<Output, String> {
     let command_parts = {
         if is_sudo_needed.unwrap_or(false) {
-            append_sudo_if_available(command_parts, Some(&description))
+            append_sudo_if_available(command_parts, Some(description))
         } else {
             command_parts
         }
     };
 
     trace!("Command: {}", command_parts.join(" "));
-    match Command::new(&command_parts[0])
+    match Command::new(command_parts[0])
         .args(&command_parts[1..])
         .stdout(Stdio::piped())
         .spawn()
@@ -39,7 +39,7 @@ pub fn command_output(
                 false => Err(format!(
                     "Error running {}: {}",
                     &command_parts.join(" "),
-                    String::from_utf8_lossy(&output.stderr).to_string()
+                    String::from_utf8_lossy(&output.stderr)
                 )),
             }
         }

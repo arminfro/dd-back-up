@@ -93,11 +93,11 @@ impl Config {
             Ok(config_file) => {
                 let parsed_config: Result<Config, _> = serde_json::from_reader(config_file);
 
-                parsed_config.map_err(|e| format!("Cannot parse config file -> {}", e.to_string()))
+                parsed_config.map_err(|e| format!("Cannot parse config file -> {}", e))
             }
             Err(e) => Err(format!(
                 "{}: {}",
-                e.to_string(),
+                e,
                 config_file_path.as_path().to_str().unwrap(),
             )),
         }
@@ -139,7 +139,7 @@ impl Config {
             // Check if the number of copies is specified and greater than 0
             for device in &backup.backup_devices {
                 if let Some(copies) = device.copies {
-                    if copies <= 0 {
+                    if copies == 0 {
                         return Err(format!(
                         "Invalid number of copies for device with serial '{}'. Must be greater than 0.",
                         device.serial

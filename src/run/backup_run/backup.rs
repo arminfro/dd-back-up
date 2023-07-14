@@ -137,7 +137,7 @@ impl<'a> Backup<'a> {
         format!(
             "{}_{}",
             current_date(),
-            self.suffix_file_name_pattern().replace(" ", "-")
+            self.suffix_file_name_pattern().replace(' ', "-")
         )
     }
 
@@ -159,10 +159,10 @@ impl<'a> Backup<'a> {
                 self.backup_device.blockdevice.serial.clone(),
             ]
             .into_iter()
-            .filter_map(|x| x)
+            .flatten()
             .collect::<Vec<String>>()
             .join("_")
-            .replace(" ", "-")
+            .replace(' ', "-")
         )
     }
 
@@ -232,12 +232,12 @@ impl<'a> Backup<'a> {
 
         let remaining_space: i64 = available_space as i64 - needed_space as i64;
         if remaining_space > 0 {
-            return Ok(());
+            Ok(())
         } else {
-            return Err(format!(
+            Err(format!(
                 "Not enough space on destination filesystem {}, to backup device {}",
                 self.dst_filesystem.device_path, self.backup_device.device_path
-            ));
+            ))
         }
     }
 

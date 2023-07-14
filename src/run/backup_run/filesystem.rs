@@ -42,7 +42,7 @@ impl Filesystem {
     /// - `Err(String)`: If the UUID is not unique among the available filesystems.
     pub fn new(
         backup_config: &BackupConfig,
-        available_filesystems: &Vec<BlockDevice>,
+        available_filesystems: &[BlockDevice],
         mountpath: Option<String>,
     ) -> Result<Option<Filesystem>, String> {
         let uuid_filtered_lsblk =
@@ -93,7 +93,7 @@ impl Filesystem {
     /// Returns a filtered list of block devices with the specified UUID, or an error if the UUID is not unique.
     fn validate_uuid_uniq<'b>(
         uuid: &str,
-        available_filesystems: &'b Vec<BlockDevice>,
+        available_filesystems: &'b [BlockDevice],
     ) -> Result<Vec<&'b BlockDevice>, String> {
         let uuid_filtered_lsblk: Vec<&BlockDevice> = available_filesystems
             .iter()
@@ -166,7 +166,7 @@ impl Filesystem {
                 "Error unmounting filesystem {} at {}: {}",
                 self.device_path,
                 &mountpoint,
-                String::from_utf8_lossy(&output.stderr).to_string()
+                String::from_utf8_lossy(&output.stderr)
             ))
         }
     }
@@ -204,7 +204,7 @@ impl Filesystem {
             self.present_backup_files(suffix_file_name_pattern, backup_dst_path)?;
         if let Some(oldest_file) = present_backup_files.iter().min_by_key(|&file_name| {
             let file_path = Path::new(backup_dst_path).join(file_name);
-            if let Ok(metadata) = fs::metadata(&file_path) {
+            if let Ok(metadata) = fs::metadata(file_path) {
                 if let Ok(created) = metadata.created() {
                     return created;
                 }
@@ -268,11 +268,8 @@ impl Filesystem {
         match self.skip_fsck {
             true => Ok(()),
             false => {
-                let fsck_command = &self.fsck_command;
-                let mut command_parts: Vec<&str> = fsck_command
-                    .split(" ")
-                    .map(|command_part| command_part.clone())
-                    .collect();
+                let fsck_command = &self.fsck_command.clone();
+                let mut command_parts: Vec<&str> = fsck_command.split(' ').collect();
                 command_parts.push(self.device_path.as_str());
 
                 let output = command_output(command_parts, "check fs", Some(true))?;

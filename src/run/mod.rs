@@ -1,10 +1,10 @@
-pub mod backup;
+pub mod backup_run;
 mod config;
 pub mod utils;
 
 use clap::{Parser, Subcommand};
 
-use self::backup::{run as backup_run, BackupArgs};
+use self::backup_run::{run as backup_run, BackupArgs};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
