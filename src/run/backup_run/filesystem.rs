@@ -283,3 +283,66 @@ impl Filesystem {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn generate_test_filesystems() -> Vec<BlockDevice> {
+        vec![
+            BlockDevice {
+                name: "sda1".to_string(),
+                model: Some("model1".to_string()),
+                serial: Some("serial1".to_string()),
+                uuid: Some("uuid1".to_string()),
+                mountpoint: Some("/mnt/sda1".to_string()),
+                size: "100GB".to_string(),
+                fsavail: Some("50GB".to_string()),
+            },
+            BlockDevice {
+                name: "sdb1".to_string(),
+                model: Some("model2".to_string()),
+                serial: Some("serial2".to_string()),
+                uuid: Some("uuid2".to_string()),
+                mountpoint: Some("/mnt/sdb1".to_string()),
+                size: "200GB".to_string(),
+                fsavail: Some("100GB".to_string()),
+            },
+            BlockDevice {
+                name: "sdc1".to_string(),
+                model: Some("model3".to_string()),
+                serial: Some("serial3".to_string()),
+                uuid: Some("uuid2".to_string()), // Duplicate UUID
+                mountpoint: Some("/mnt/sdc1".to_string()),
+                size: "300GB".to_string(),
+                fsavail: Some("150GB".to_string()),
+            },
+        ]
+    }
+
+    #[test]
+    fn test_validate_present_uuid() {
+        let filesystems = generate_test_filesystems();
+
+        let uuid_filtered_lsblk = filesystems
+            .iter()
+            .filter(|fs| fs.uuid.as_deref() == Some("uuid1"))
+            .collect::<Vec<&BlockDevice>>();
+        assert!(Filesystem::validate_present_uuid(uuid_filtered_lsblk).is_some());
+
+        let uuid_filtered_lsblk = filesystems
+            .iter()
+            .filter(|fs| fs.uuid.as_deref() == Some("uuid2"))
+            .collect::<Vec<&BlockDevice>>();
+        assert!(Filesystem::validate_present_uuid(uuid_filtered_lsblk).is_none());
+    }
+
+    #[test]
+    fn test_validate_uuid_uniq() {
+        let filesystems = generate_test_filesystems();
+
+        assert!(Filesystem::validate_uuid_uniq("uuid1", &filesystems).is_ok());
+        assert!(Filesystem::validate_uuid_uniq("uuid2", &filesystems).is_err());
+        assert!(Filesystem::validate_uuid_uniq("uuid3", &filesystems).is_ok()); // UUID not present
+    }
+}
