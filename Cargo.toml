@@ -3,10 +3,16 @@ name = "dd_backup"
 version = "0.1.0"
 edition = "2021"
 author = "arminfro"
-about = "about"
-long_about = "long_about"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "A utility for creating device backups using dd"
+homepage = "https://github.com/arminfro/dd_backup"
+repository = "https://github.com/arminfro/dd_backup"
+readme = "README.md"
+
+[package.metadata]
+keywords = ["backup"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 chrono = "0.4.26"
@@ -18,5 +24,5 @@ libc = "0.2.146"
 log = "0.4"
 nix = "0.26.2"
 relative-path = "1.8.0"
-serde  = {version="1.0.164", features = ["derive"] }
+serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.96"

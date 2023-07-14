@@ -1,7 +1,7 @@
 # `dd_backup`
 
-A command-line tool written in Rust that performs block device backups using the `dd` command.
-It allows you to back up specific devices to a designated filesystem or partition.
+A command-line tool that performs block device backups using the `dd` command.
+It allows you to back up specific devices to a designated filesystem.
 
 ## Features
 
@@ -10,7 +10,7 @@ It allows you to back up specific devices to a designated filesystem or partitio
   - Configurable relative destination paths for backups on each target filesystem.
 - Each device can have an optional `copies` field to maintain a fixed number of stored backups.
   - Ensures a consistent size of stored backups.
-  - Automatically creates or deletes backup image files based on the configuration.
+  - Automatically deletes oldest backup image file, if count exceeds.
 - Provides the ability to define another backup filesystem for the device on which your others backups are located.
   - Allows you to have a backup of your backup device.
 - Safety features:
@@ -76,9 +76,9 @@ The configuration file (`~/.config/dd_backup/config.json`) is used to specify th
 
   - Optional, defaults to "/mnt"
 
-- `backups`: An array of backup configurations. Each configuration specifies a destination backup filesystem or partition and the devices to be backed up on that filesystem.
+- `backups`: An array of backup configurations. Each configuration specifies a destination backup filesystem and the devices to be backed up on that filesystem.
 
-  - `uuid`: The UUID of the destination backup filesystem or partition.
+  - `uuid`: The UUID of the destination backup filesystem.
 
     - obtain the uuid with tools like `lsblk -n -o NAME,UUID`
 
@@ -136,7 +136,7 @@ Options:
   -c, --config-file-path <CONFIG_FILE_PATH> [default: "~/.config/dd_backup.json"]
           The path to the configuration file
       --destination-uuid <DESTINATION_UUID>
-          The UUID of the destination backup filesystem or partition, single-back-up-only
+          The UUID of the destination backup filesystem, single-back-up-only
       --source-serial <SOURCE_SERIAL>
           The serial number of the source device to be backed up, single-back-up-only
       --destination-path <DESTINATION_PATH>
@@ -181,6 +181,3 @@ Here's an example command that runs the application with increased log output, s
 ```shell
 RUST_LOG=debug dd_backup run 2>&1 | tee -a backup.log
 ```
-
-License:
-This project is licensed under the MIT license.

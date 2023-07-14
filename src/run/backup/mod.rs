@@ -38,7 +38,7 @@ pub struct FileConfigArgs {
     pub config_file_path: Option<String>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct SingleBackupArgs {
     #[clap(long, conflicts_with = "file-config-args")]
     /// The UUID of the destination backup filesystem or partition, single-back-up-only.
@@ -150,4 +150,73 @@ fn backup_args_to_config(backup_args: &BackupArgs) -> Result<Config, String> {
     .map_err(|e| format!("Failed to create Config struct object: {}", e))?;
 
     Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::run::backup::{FileConfigArgs, SingleBackupArgs};
+
+    use super::*;
+
+    #[test]
+    fn test_run() {
+        let valid_single_backup_args = SingleBackupArgs {
+            destination_uuid: Some("some-uuid-which-does-not-exist".to_string()),
+            destination_path: None,
+            source_serial: Some("some-source-serial-which-does-not-exist".to_string()),
+            copies: None,
+            name: None,
+            fsck_command: "fsck -n".to_string(),
+            skip_fsck: false,
+            skip_mount: false,
+        };
+
+        let invalid_single_backup_args = SingleBackupArgs {
+            destination_uuid: None,
+            destination_path: None,
+            source_serial: None,
+            copies: None,
+            name: None,
+            fsck_command: "fsck -n".to_string(),
+            skip_fsck: false,
+            skip_mount: false,
+        };
+        // Test when the command is `Run` and backup_run returns Ok(())
+        let backup_args = BackupArgs {
+            dry_run: false,
+            file_config_args: None,
+            single_backup_args: Some(valid_single_backup_args),
+            mountpath: None,
+        };
+        let result = run(&backup_args);
+        assert_eq!(result, Ok(()));
+
+        // Test when config is not found
+        let backup_args = BackupArgs {
+            dry_run: false, /* initialize backup_args with appropriate values */
+            file_config_args: Some(FileConfigArgs {
+                config_file_path: Some("/does/not/exist.json".to_string()),
+            }),
+            single_backup_args: Some(invalid_single_backup_args.clone()),
+            mountpath: None,
+        };
+        let result = run(&backup_args);
+        assert_eq!(
+            result,
+            Err("Failed to create Config struct object: No such file or directory (os error 2): /does/not/exist.json".to_string())
+        );
+
+        // Test when using invalid single_backup_args
+        let backup_args = BackupArgs {
+            dry_run: false, /* initialize backup_args with appropriate values */
+            file_config_args: None,
+            single_backup_args: Some(invalid_single_backup_args),
+            mountpath: None,
+        };
+        let result = run(&backup_args);
+        assert_eq!(
+            result,
+            Err("Source serial needs to be provided in single backup mode, like: `--source-serial x...x`".to_string())
+        );
+    }
 }

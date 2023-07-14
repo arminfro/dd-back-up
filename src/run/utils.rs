@@ -37,6 +37,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_current_date() {
+        let date = current_date();
+        assert_eq!(date.len(), 10);
+        assert_eq!(date.chars().nth(4).unwrap(), '-');
+        assert_eq!(date.chars().nth(7).unwrap(), '-');
+    }
+
+    #[test]
     fn test_convert_to_byte_size() {
         assert_eq!(convert_to_byte_size("0B"), Ok(Some(0)));
         assert_eq!(convert_to_byte_size("100B"), Ok(Some(100)));
