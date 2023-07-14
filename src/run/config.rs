@@ -5,7 +5,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BackupDevice {
     /// The serial number of the device.
     pub serial: String,
@@ -202,5 +202,119 @@ impl Config {
                 e
             )
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_config_success() {
+        let device1 = BackupDevice {
+            serial: "device1".to_string(),
+            copies: Some(1),
+            name: None,
+        };
+        let device2 = BackupDevice {
+            serial: "device2".to_string(),
+            copies: Some(1),
+            name: None,
+        };
+        let backup1 = BackupConfig {
+            uuid: "backup1".to_string(),
+            backup_devices: vec![device1],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let backup2 = BackupConfig {
+            uuid: "backup2".to_string(),
+            backup_devices: vec![device2],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let config = Config {
+            backups: vec![backup1, backup2],
+            mountpath: Some("/mnt".to_string()),
+        };
+        assert!(Config::validate_config(Ok(config)).is_ok());
+    }
+
+    #[test]
+    fn test_validate_config_duplicate_uuids() {
+        let device = BackupDevice {
+            serial: "device".to_string(),
+            copies: Some(1),
+            name: None,
+        };
+        let backup1 = BackupConfig {
+            uuid: "backup".to_string(),
+            backup_devices: vec![device.clone()],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let backup2 = BackupConfig {
+            uuid: "backup".to_string(),
+            backup_devices: vec![device],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let config = Config {
+            backups: vec![backup1, backup2],
+            mountpath: Some("/mnt".to_string()),
+        };
+        assert!(Config::validate_config(Ok(config)).is_err());
+    }
+
+    #[test]
+    fn test_validate_config_duplicate_serials() {
+        let device = BackupDevice {
+            serial: "device".to_string(),
+            copies: Some(1),
+            name: None,
+        };
+        let backup = BackupConfig {
+            uuid: "backup".to_string(),
+            backup_devices: vec![device.clone(), device],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let config = Config {
+            backups: vec![backup],
+            mountpath: Some("/mnt".to_string()),
+        };
+        assert!(Config::validate_config(Ok(config)).is_err());
+    }
+
+    #[test]
+    fn test_validate_config_zero_copies() {
+        let device = BackupDevice {
+            serial: "device".to_string(),
+            copies: Some(0),
+            name: None,
+        };
+        let backup = BackupConfig {
+            uuid: "backup".to_string(),
+            backup_devices: vec![device],
+            destination_path: None,
+            fsck_command: None,
+            skip_fsck: None,
+            skip_mount: None,
+        };
+        let config = Config {
+            backups: vec![backup],
+            mountpath: Some("/mnt".to_string()),
+        };
+        assert!(Config::validate_config(Ok(config)).is_err());
     }
 }
