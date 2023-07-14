@@ -80,7 +80,7 @@ impl<'a> Backup<'a> {
                     Err(format!(
                         "Error running dd command {}: {}",
                         &command_parts.join(" "),
-                        String::from_utf8_lossy(&output.stderr).to_string()
+                        String::from_utf8_lossy(&output.stderr)
                     ))
                 }
             }
@@ -221,23 +221,24 @@ impl<'a> Backup<'a> {
     /// If there is not enough space or if it couldn't be read, an error is returned with a descriptive message.
     /// If either available_space or needed_space is None then proceed with an Ok as well.
     fn target_filesystem_has_enough_space(&self) -> Result<(), String> {
-        let available_space = self.dst_filesystem.available_space()?;
-        let needed_space = self.backup_device.total_size()?;
+        let available_space = self.dst_filesystem.available_space()?.ok_or(format!(
+            "Available space on {} not readable",
+            self.dst_filesystem.device_path
+        ))?;
+        let needed_space = self.backup_device.total_size()?.ok_or(format!(
+            "Needed space on {} not readable",
+            self.backup_device.device_path
+        ))?;
 
-        if let Some(available_space) = available_space {
-            if let Some(needed_space) = needed_space {
-                let remaining_space: i64 = available_space as i64 - needed_space as i64;
-                if remaining_space > 0 {
-                    return Ok(());
-                } else {
-                    return Err(format!(
-                        "Not enough space on destination filesystem {}, to backup device {}",
-                        self.dst_filesystem.device_path, self.backup_device.device_path
-                    ));
-                }
-            }
+        let remaining_space: i64 = available_space as i64 - needed_space as i64;
+        if remaining_space > 0 {
+            return Ok(());
+        } else {
+            return Err(format!(
+                "Not enough space on destination filesystem {}, to backup device {}",
+                self.dst_filesystem.device_path, self.backup_device.device_path
+            ));
         }
-        Err("Could not check if sufficient space is available".to_string())
     }
 
     /// Checks if the target backup file is already present.
