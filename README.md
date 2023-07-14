@@ -28,7 +28,7 @@ It allows you to back up specific devices to a designated filesystem.
 ## Installation
 
 ```shell
-git clone https://github.com/arminfro/dd_backup.git && cd dd_backup && cargo install --path .
+cargo install dd_backup
 ```
 
 ## Usage:
