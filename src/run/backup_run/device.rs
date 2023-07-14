@@ -116,3 +116,63 @@ impl Device {
         convert_to_byte_size(&self.blockdevice.size)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn generate_test_devices() -> Vec<BlockDevice> {
+        vec![
+            BlockDevice {
+                name: "sda1".to_string(),
+                model: Some("model1".to_string()),
+                serial: Some("serial1".to_string()),
+                uuid: Some("uuid1".to_string()),
+                mountpoint: Some("/mnt/sda1".to_string()),
+                size: "100GB".to_string(),
+                fsavail: Some("50GB".to_string()),
+            },
+            BlockDevice {
+                name: "sdb1".to_string(),
+                model: Some("model2".to_string()),
+                serial: Some("serial2".to_string()),
+                uuid: Some("uuid2".to_string()),
+                mountpoint: Some("/mnt/sdb1".to_string()),
+                size: "200GB".to_string(),
+                fsavail: Some("100GB".to_string()),
+            },
+            BlockDevice {
+                name: "sdc1".to_string(),
+                model: Some("model3".to_string()),
+                serial: Some("serial2".to_string()), // Duplicate serial
+                uuid: Some("uuid3".to_string()),
+                mountpoint: Some("/mnt/sdc1".to_string()),
+                size: "300GB".to_string(),
+                fsavail: Some("150GB".to_string()),
+            },
+        ]
+    }
+
+    #[test]
+    fn test_validate_serial() {
+        let devices = generate_test_devices();
+
+        // Serial exists and is unique
+        match Device::validate_serial("serial1", &devices) {
+            Ok(device) => assert_eq!(device.serial.clone().unwrap(), "serial1"),
+            Err(msg) => panic!("Error: {:?}", msg),
+        }
+
+        // Serial exists but is not unique
+        match Device::validate_serial("serial2", &devices) {
+            Ok(_) => panic!("Should have failed due to non-unique serial"),
+            Err(msg) => assert!(msg.contains("not a unique serial")),
+        }
+
+        // Serial does not exist
+        match Device::validate_serial("serial3", &devices) {
+            Ok(_) => panic!("Should have failed due to non-existent serial"),
+            Err(msg) => assert!(msg.contains("Device not found")),
+        }
+    }
+}
