@@ -1,11 +1,11 @@
 [package]
 name = "dd_backup"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 author = "arminfro"
 
 license = "MIT"
-description = "A utility for creating device backups using dd"
+description = "An utility for creating device backups using dd"
 homepage = "https://github.com/arminfro/dd_backup"
 documentation = "https://docs.rs/dd_backup"
 repository = "https://github.com/arminfro/dd_backup"

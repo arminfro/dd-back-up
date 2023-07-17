@@ -25,6 +25,25 @@ It allows you to back up specific devices to a designated filesystem.
   - Color-coded log output for improved readability.
 - Can be used on a USB stick with a Linux live system to back up any operating system.
 
+## Why block device backups?
+
+`dd_backup` operates at the block device level, offering a distinct approach to backups compared to many other backup tools that work at the file-system level.
+
+When performing backups at the block device level, you will get a complete backup of the device, capturing all data, configurations, and file systems as they are, without any abstraction or modification.
+This comes at the cost of more time and more storage space on creating, since all sectors are captured including empty ones.
+
+The main reason why you may like to have a block device backup is backing up the operating system with all partition and storage configurations in the same way as your other data.
+In the event of a sudden hard drive failure, you can quickly restore the entire block device, enabling a faster recovery process of your OS device.
+
+It's even possible to combine this approach with backup tools operating on the file system layer, since you can use a loopback device to read and write the image file, created by dd.
+You can run `dd_backup` once to create the initial block device backup and then use the resulting image file for restoration or for subsequent file-system level backups, capturing specific changes and modifications.
+
+In my personal use case, I run `dd_backup` before going to sleep, as the creation time is not a concern for me.
+I employ it on a bootable live Linux system that is configured to automatically run dd_backup upon boot.
+This setup enables me to back up my home server, which lacks a display or keyboard, without the need to physically move the server and its external storage devices to my desk.
+Additionally, I have two physical hard drives in my main computer, one for my Linux system and the other for my Windows system, both sharing a boot partition.
+In the worst-case scenario of one hard drive failure two operating systems are not bootable.
+
 ## Installation
 
 ```shell
